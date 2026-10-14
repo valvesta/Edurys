@@ -17,6 +17,8 @@ app.use(helmet({
     directives: {
       'script-src': ["'self'"],
       'connect-src': ["'self'", 'https://login.microsoftonline.com', 'https://*.ciamlogin.com'],
+      // MSAL tylus žetono atnaujinimas vyksta paslėptame iframe
+      'frame-src': ["'self'", 'https://login.microsoftonline.com', 'https://*.ciamlogin.com'],
       'frame-ancestors': ["'none'"],
     },
   },
@@ -34,8 +36,16 @@ app.use((req, res, next) => {
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 app.use('/api', routes);
 
-// Naršyklės dalis (vaizdas) — statiniai failai iš ../web
-app.use(express.static(path.join(__dirname, '..', '..', 'web'), { index: 'index.html', maxAge: '1h' }));
+// Naršyklės dalis (vaizdas) — statiniai failai iš ../web.
+// index.html niekada nekešuojamas, kad po atnaujinimo naudotojai iškart gautų naują versiją.
+const WEB_DIR = path.join(__dirname, '..', '..', 'web');
+const noCache = res => res.setHeader('Cache-Control', 'no-cache');
+app.use(express.static(WEB_DIR, {
+  index: 'index.html', maxAge: '1h',
+  setHeaders: (res, file) => { if (file.endsWith('.html')) noCache(res); },
+}));
+// Puslapių adresai (/uzsakymai, /kvietimas ir t. t.) — visi atidaro tą pačią programą
+app.get(/^\/(?!api\/|healthz)[a-z0-9\-\/]*$/i, (req, res) => { noCache(res); res.sendFile(path.join(WEB_DIR, 'index.html')); });
 
 // Klaidų apdorojimas: DB verslo klaidos -> aiškus pranešimas; kitos -> bendras
 app.use((err, req, res, next) => {   // eslint-disable-line no-unused-vars

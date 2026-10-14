@@ -33,10 +33,24 @@ function loadProviders() {
   return list;
 }
 
+/* Naršyklės prisijungimo nustatymai (viešai matomi — tai ne paslaptys).
+   Nuomininkas ir API leidimas išvedami iš pirmojo (darbuotojų) tiekėjo. */
+function webAuth(providers) {
+  const staff = providers[0];
+  const m = /^https:\/\/login\.microsoftonline\.com\/([0-9a-f-]{36})\/v2\.0$/i.exec(staff.issuer);
+  return {
+    clientId: process.env.WEB_CLIENT_ID || null,
+    authority: m ? `https://login.microsoftonline.com/${m[1]}` : null,
+    scope: `api://${staff.audience}/access_as_user`,
+  };
+}
+const authProviders = loadProviders();
+
 module.exports = {
   port: Number(process.env.PORT || 8080),
   appBaseUrl: req('APP_BASE_URL').replace(/\/+$/, ''),
-  authProviders: loadProviders(),
+  authProviders,
+  webAuth: webAuth(authProviders),
   invitationDays: Number(process.env.INVITATION_DAYS || 7),
   db: {
     server: req('DB_SERVER'),

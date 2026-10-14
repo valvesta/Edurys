@@ -1,0 +1,135 @@
+/* ==========================================================================
+   Durų užsakymų sistema — išvaizda.
+   Dizaineriui: spalvos, šriftai ir tarpai — kintamuosiuose žemiau.
+   Klases galima keisti laisvai; nekeiskite tik data-role atributų HTML/JS.
+   ========================================================================== */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #1d2330;
+  --muted: #6b7280;
+  --border: #e3e6eb;
+  --primary: #1f4e79;
+  --primary-text: #ffffff;
+  --danger: #b42318;
+  --ok: #067647;
+  --warn: #b54708;
+  --info: #175cd3;
+  --accent: #6941c6;
+  --radius: 8px;
+  --font: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  --nav-width: 220px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--font); }
+a { color: var(--primary); }
+h1 { font-size: 22px; margin: 0; }
+h2 { font-size: 16px; margin: 28px 0 10px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.boot, .loading { padding: 40px; color: var(--muted); }
+
+/* ---- karkasas ---- */
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;
+  background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+.brand { font-weight: 700; font-size: 16px; text-decoration: none; color: var(--text); }
+.user { display: flex; gap: 14px; align-items: center; text-align: right; }
+.layout { display: flex; min-height: calc(100vh - 57px); }
+.nav { width: var(--nav-width); flex-shrink: 0; padding: 16px 10px; border-right: 1px solid var(--border); background: var(--surface); }
+.nav a { display: block; padding: 8px 12px; border-radius: 6px; color: var(--text); text-decoration: none; margin-bottom: 2px; }
+.nav a:hover { background: var(--bg); }
+.nav a.active { background: var(--primary); color: var(--primary-text); }
+.content { flex: 1; padding: 24px 28px 60px; max-width: 1400px; min-width: 0; }
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.back { display: inline-block; margin-bottom: 8px; text-decoration: none; }
+
+/* ---- mygtukai ---- */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn:hover { border-color: #c5cad3; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: var(--primary-text); }
+.btn-danger { color: var(--danger); border-color: #f1c4c0; }
+.modal .btn-danger[type=submit] { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-lg { padding: 11px 22px; font-size: 15px; }
+
+/* ---- lentelės ---- */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.table th { font-size: 12px; font-weight: 600; color: var(--muted); background: #fafbfc; white-space: nowrap; }
+.table tr:last-child td { border-bottom: 0; }
+.table tr.clickable { cursor: pointer; }
+.table tr.clickable:hover td { background: #f8fafc; }
+.num { text-align: right !important; white-space: nowrap; }
+.row-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.clip { max-width: 360px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word; }
+.empty { padding: 32px; text-align: center; color: var(--muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); }
+
+/* ---- statusai ---- */
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge-muted { background: #f2f4f7; color: #475467; }
+.badge-info { background: #eff8ff; color: var(--info); }
+.badge-accent { background: #f4f3ff; color: var(--accent); }
+.badge-warn { background: #fffaeb; color: var(--warn); }
+.badge-ok { background: #ecfdf3; color: var(--ok); }
+.badge-bad { background: #fef3f2; color: var(--danger); }
+
+/* ---- filtrai, kortelės ---- */
+.filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filters input, .filters select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: var(--surface); }
+.filters input { min-width: 280px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+.tab { padding: 8px 14px; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: var(--text); border-bottom-color: var(--primary); font-weight: 600; }
+.pager { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+.card-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.notes { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); white-space: pre-wrap; }
+.totals { margin: 12px 0 0 auto; max-width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+.totals > div { display: flex; justify-content: space-between; padding: 3px 0; }
+.totals .grand { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 8px; font-size: 16px; }
+.breakdown { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.breakdown ul { margin: 6px 0 0; padding-left: 16px; }
+.breakdown li { display: flex; justify-content: space-between; gap: 16px; }
+.timeline { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--border); }
+.timeline li { padding: 6px 0 10px 14px; position: relative; }
+.timeline li::before { content: ""; position: absolute; left: -6px; top: 11px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+.comment { margin-top: 4px; padding: 6px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; white-space: pre-wrap; }
+
+/* ---- formos, modalai ---- */
+.overlay { position: fixed; inset: 0; background: rgba(16, 24, 40, .45); display: flex; align-items: flex-start; justify-content: center; padding: 8vh 16px; z-index: 20; overflow-y: auto; }
+.modal { background: var(--surface); border-radius: 12px; padding: 22px 24px; width: 100%; max-width: 520px; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+.modal h2 { margin-top: 0; }
+.form { display: flex; flex-direction: column; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field > span { font-weight: 600; font-size: 13px; }
+.field input, .field select, .field textarea { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: inherit; width: 100%; background: #fff; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid #c7d7fe; border-color: var(--primary); }
+.field small { color: var(--muted); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.alert { padding: 10px 14px; border-radius: 6px; margin: 8px 0; }
+.alert-bad { background: #fef3f2; color: var(--danger); border: 1px solid #fecdca; }
+
+/* ---- vieši puslapiai ---- */
+.public-card { max-width: 560px; margin: 8vh auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px 30px; }
+.public-card h1 { margin-bottom: 8px; }
+.login { text-align: center; }
+.login .btn-lg { margin: 18px 0; }
+.brand-big { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+
+/* ---- pranešimai ---- */
+#toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 30; }
+.toast { padding: 10px 16px; border-radius: 8px; background: #1d2330; color: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.2); max-width: 420px; }
+.toast-bad { background: var(--danger); }
+
+@media (max-width: 800px) {
+  .layout { flex-direction: column; }
+  .nav { width: auto; display: flex; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 8px; }
+  .nav a { white-space: nowrap; }
+  .content { padding: 16px; }
+  .filters input { min-width: 0; flex: 1; }
+}

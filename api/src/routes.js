@@ -74,6 +74,11 @@ router.post('/public/access-requests', publicLimiter, wrap(async (req, res) => {
   res.status(201).json({ accessRequestId: r.recordset[0].AccessRequestId });
 }));
 
+/* Naršyklės prisijungimo nustatymai (ne paslaptys). */
+router.get('/public/config', (req, res) => {
+  res.json({ ...config.webAuth, appBaseUrl: config.appBaseUrl });
+});
+
 // ---------------------------------------------------------------- prisijungimas
 router.get('/me', requireUser, (req, res) => {
   const u = req.user;
@@ -294,6 +299,64 @@ router.post('/orders/:id/status', requireUser, wrap(async (req, res) => {
     Comment: [sql.NVarChar(1000), str(b.comment, 1000)],
   });
   res.json(r.recordset[0]);
+}));
+
+// ---------------------------------------------------------------- administravimas
+router.get('/admin/settings', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  const r = await callProcedure('api.Setting_List', { ActorUserId: [sql.Int, req.user.UserId] });
+  res.json(r.recordset);
+}));
+
+router.put('/admin/settings/:key', requireUser, requireLevel(40), wrap(async (req, res) => {
+  const key = str(req.params.key, 60, true);
+  if (!/^[A-Z_]{2,60}$/.test(key)) throw badRequest('Neteisingas nustatymo pavadinimas.');
+  await callProcedure('api.Setting_Set', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    SettingKey: [sql.VarChar(60), key],
+    SettingValue: [sql.NVarChar(1000), str((req.body || {}).value, 1000)],
+  });
+  res.json({ ok: true });
+}));
+
+router.get('/admin/catalog-versions', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  const r = await callProcedure('api.Catalog_ListVersions', { ActorUserId: [sql.Int, req.user.UserId] });
+  res.json(r.recordset);
+}));
+
+router.put('/admin/manufacturers/:id/order-email', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  await callProcedure('api.Manufacturer_SetOrderEmail', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    ManufacturerId: [sql.Int, int(req.params.id, true)],
+    OrderEmail: [sql.NVarChar(320), str((req.body || {}).email, 320)],
+  });
+  res.json({ ok: true });
+}));
+
+router.get('/admin/emails', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  const r = await callProcedure('api.Email_ListRecent', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    Status: [sql.VarChar(20), str(req.query.status, 20)],
+    Top: [sql.Int, 200],
+  });
+  res.json(r.recordset);
+}));
+
+router.post('/admin/emails/:id/retry', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  await callProcedure('api.Email_Retry', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    EmailId: [sql.BigInt, int(req.params.id, true)],
+  });
+  res.json({ ok: true });
+}));
+
+router.get('/admin/audit', requireUser, requireLevel(40), wrap(async (req, res) => {
+  const r = await callProcedure('api.Audit_List', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    EntityType: [sql.VarChar(40), str(req.query.entityType, 40)],
+    EntityId: [sql.NVarChar(60), str(req.query.entityId, 60)],
+    Top: [sql.Int, 300],
+  });
+  res.json(r.recordset);
 }));
 
 module.exports = router;
