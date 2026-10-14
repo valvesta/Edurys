@@ -20,6 +20,8 @@ app.use(helmet({
       // MSAL tylus žetono atnaujinimas vyksta paslėptame iframe
       'frame-src': ["'self'", 'https://login.microsoftonline.com', 'https://*.ciamlogin.com'],
       'frame-ancestors': ["'none'"],
+      // nuotraukos — iš privačios saugyklos su laikinu leidimu (media.js)
+      'img-src': ["'self'", 'data:'].concat(config.media.account ? [`https://${config.media.account}.blob.core.windows.net`] : []),
     },
   },
   strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true },
@@ -39,11 +41,28 @@ app.use('/api', routes);
 // Naršyklės dalis (vaizdas) — statiniai failai iš ../web.
 // index.html niekada nekešuojamas, kad po atnaujinimo naudotojai iškart gautų naują versiją.
 const WEB_DIR = path.join(__dirname, '..', '..', 'web');
+const CONFIGURATOR_DIR = path.join(WEB_DIR, 'konfiguratorius') + path.sep;
 const noCache = res => res.setHeader('Cache-Control', 'no-cache');
 app.use(express.static(WEB_DIR, {
   index: 'index.html', maxAge: '1h',
-  setHeaders: (res, file) => { if (file.endsWith('.html')) noCache(res); },
+  // HTML ir konfigūratoriaus failai visada tikrinami (ETag), kad po
+  // atnaujinimo naršyklė negautų senų ir naujų failų mišinio.
+  setHeaders: (res, file) => { if (file.endsWith('.html') || file.startsWith(CONFIGURATOR_DIR)) noCache(res); },
 }));
+
+/* Kainų variklis naršyklei — TIE PATYS failai, kurie skaičiuoja kainas
+   serveryje (api/src/engines/<gamintojas>). Tiekiami tik išvardyti failai. */
+const ENGINE_FILES = { erkado: ['bootstrap.js', 'helpers.js', 'engine.js'] };
+app.get('/engine/:maker/:file', (req, res, next) => {
+  const files = ENGINE_FILES[req.params.maker];
+  if (!files || !files.includes(req.params.file)) return next();
+  noCache(res);
+  res.type('application/javascript');
+  res.sendFile(path.join(__dirname, 'engines', req.params.maker, req.params.file));
+});
+
+// Nuotraukos iš vietinio aplanko — tik kūrimo aplinkoje (žr. config.media.devDir)
+if (config.media.devDir) app.use('/dev-media', express.static(config.media.devDir, { fallthrough: false }));
 // Puslapių adresai (/uzsakymai, /kvietimas ir t. t.) — visi atidaro tą pačią programą
 app.get(/^\/(?!api\/|healthz)[a-z0-9\-\/]*$/i, (req, res) => { noCache(res); res.sendFile(path.join(WEB_DIR, 'index.html')); });
 

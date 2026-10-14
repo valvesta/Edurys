@@ -9,9 +9,12 @@
     "worker": "node src/worker/email-worker.js",
     "test": "node --test test/*.test.js"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@azure/identity": "^4.5.0",
+    "@azure/storage-blob": "^12.34.0",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",

@@ -74,6 +74,9 @@ async function start() {
     return;
   }
 
+  // Grįžus po prisijungimo į konfigūratorių (atskiras puslapis) — atidarome jį
+  if (auth.returnPath && /^\/konfiguratorius(\/|$)/.test(auth.returnPath)) { location.replace(auth.returnPath); return; }
+
   renderShell();
   const target = auth.returnPath && auth.returnPath !== '/kvietimas' ? auth.returnPath : path;
   navigate(target === '/' || target === '/kvietimas' ? '/uzsakymai' : target, true);

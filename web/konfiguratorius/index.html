@@ -3,22 +3,50 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ERKADO VIDAUS · užsakymų katalogas</title>
-<link rel="stylesheet" href="styles.css" />
+<title>Konfigūratorius · Durų užsakymai</title>
+<link rel="stylesheet" href="/konfiguratorius/styles.css" />
+<script src="/vendor/msal-browser-4.30.0.min.js" defer></script>
+<script type="module" src="/konfiguratorius/boot.js"></script>
 </head>
 <body>
 
-<!-- Užsakymo numerio patvirtinimo langas — pirmas žingsnis, uždengia visą
-     puslapį, kol nepatvirtintas (užsakovo prašymas 2026-09-24). Laukas iš
-     anksto užpildytas automatiškai sugeneruotu numeriu (E + MMDDHHMI, pagal
-     Lietuvos laiko juostą) — operatorius gali jį priimti tokį, koks yra,
-     arba perrašyti savo. Patvirtinta reikšmė nukeliauja į #orderNumber. -->
-<div class="modal-overlay" id="orderNumberModal">
+<!-- ==========================================================================
+     Dizaineriui: išvaizda keičiama styles.css, HTML dalys — šiame faile ir
+     templates.js. Elementų id ir data-* atributų NEKEISKITE — pagal juos
+     veikia programa (app.js, boot.js).
+     ========================================================================== -->
+
+<!-- Kraunama / klaida — rodoma, kol paruošiamas katalogas -->
+<div class="boot-overlay" id="bootOverlay">
+  <div class="boot-box">
+    <div class="boot-brand">Durų konfigūratorius</div>
+    <p id="bootMessage">Kraunama…</p>
+    <div id="bootActions" class="boot-actions" hidden></div>
+  </div>
+</div>
+
+<!-- Administratoriui: kuriai įmonei kuriamas užsakymas (rodoma prieš pirmą išsaugojimą) -->
+<div class="modal-overlay" id="companyModal" hidden>
   <div class="modal-box">
-    <h2>Užsakymo numeris</h2>
-    <p>Prieš pradedant, patvirtinkite arba įrašykite šio užsakymo numerį.</p>
-    <input id="orderNumberModalInput" class="modal-input" />
-    <button id="orderNumberModalConfirm" class="btn-primary" type="button">Patvirtinti</button>
+    <h2>Kuriai įmonei kuriamas užsakymas?</h2>
+    <p>Užsakymas bus išsaugotas pasirinktos įmonės vardu.</p>
+    <select id="companySelect" class="modal-input"></select>
+    <div class="modal-buttons">
+      <button id="companyCancel" class="btn-secondary" type="button">Atšaukti</button>
+      <button id="companyConfirm" class="btn-primary" type="button">Tęsti</button>
+    </div>
+  </div>
+</div>
+
+<!-- Užsakymo pateikimo patvirtinimas -->
+<div class="modal-overlay" id="submitModal" hidden>
+  <div class="modal-box">
+    <h2>Pateikti užsakymą?</h2>
+    <p id="submitModalText"></p>
+    <div class="modal-buttons">
+      <button id="submitCancel" class="btn-secondary" type="button">Atšaukti</button>
+      <button id="submitConfirm" class="btn-primary" type="button">Pateikti</button>
+    </div>
   </div>
 </div>
 
@@ -27,6 +55,8 @@
     <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <div class="brand-text"><strong>ERKADO</strong><em>vidaus</em></div>
   </div>
+  <a class="client-toggle topbar-back" href="/uzsakymai">← Užsakymai</a>
+  <div class="order-status" id="orderStatus" aria-live="polite"></div>
   <nav class="topbar-tabs">
     <button class="tab active" data-view="configurator" type="button">Konfigūratorius</button>
     <button class="tab" data-view="cart" type="button">Užsakymas <span id="tabCartCount" class="tab-count">0</span></button>
@@ -39,6 +69,7 @@
 </header>
 
 <section class="client-panel" id="sellerPanel" hidden>
+  <p class="panel-note">Šie duomenys naudojami tik spausdinamai sąskaitai — sistemoje jie neišsaugomi.</p>
   <label><span>Pavadinimas</span><input id="sellerName" value="ERKADO" /></label>
   <label><span>Įmonės kodas</span><input id="sellerCode" placeholder="Jūsų įmonės kodas" /></label>
   <label><span>PVM mokėtojo kodas</span><input id="sellerVat" placeholder="LT..........." /></label>
@@ -48,7 +79,7 @@
 </section>
 
 <section class="client-panel" id="clientPanel" hidden>
-  <label><span>Užsakymo numeris</span><input id="orderNumber" placeholder="pvz. E09241024" /></label>
+  <p class="panel-note">Šie duomenys naudojami tik spausdinamai sąskaitai ir gamybos lapui — sistemoje jie neišsaugomi.</p>
   <label><span>Data</span><input id="orderDate" type="date" /></label>
   <label><span>Mokėjimo terminas, d.d.</span><input id="paymentDays" type="number" min="0" value="7" /></label>
   <label><span>Užsakovas</span><input id="customerName" placeholder="Įmonės arba kliento pavadinimas" /></label>
@@ -117,6 +148,7 @@
           <div class="qty-control"><button id="qtyMinus" type="button">−</button><input id="qty" type="number" min="1" value="1" /><button id="qtyPlus" type="button">+</button></div>
         </label>
         <div id="missingHint" class="missing-hint" hidden></div>
+        <div id="editHint" class="edit-hint" hidden>Redaguojama pozicija Nr. <span id="editNo"></span>. <button id="cancelEdit" class="btn-link" type="button">Atšaukti redagavimą</button></div>
         <button id="addToOrder" class="btn-primary">Įtraukti į užsakymą</button>
         <div id="postAddActions" class="post-add" hidden>
           <p class="post-add-note">Komplektas įtrauktas į užsakymą. Ką darome toliau?</p>
@@ -152,28 +184,20 @@
 
   <section class="send-module">
     <div class="send-module-inner">
-      <div class="step-head"><span class="step-index">✉</span><h2>Siųsti užsakymą</h2><span class="step-sub">paskutinis žingsnis</span></div>
+      <div class="step-head"><span class="step-index">✓</span><h2>Pateikti užsakymą</h2><span class="step-sub">paskutinis žingsnis</span></div>
 
       <div class="send-grid">
         <div class="send-fields">
-          <label class="text-field"><span>Jūsų vardas / įmonė (nuo)</span><input id="senderName" placeholder="pvz. Jonas Jonaitis, UAB Statyba" /></label>
-          <label class="text-field"><span>Gavėjo el. paštas (kam)</span><input id="sendTo" type="email" placeholder="uzsakymai@erkado.lt" /></label>
-          <label class="text-field"><span>Laiško tema</span><input id="sendSubject" /></label>
+          <label class="text-field"><span>Objektas / užsakovo nuoroda</span><input id="customerRef" maxlength="100" placeholder="pvz. Vilnius, Žirmūnų g. 5" /></label>
+          <label class="text-field"><span>Pastabos gamintojui / administratoriui</span><textarea id="orderNotes" maxlength="2000" rows="4" placeholder="Pristatymo sąlygos, terminai ir pan."></textarea></label>
+          <label class="text-field"><span>Pateikė (rodoma dokumentuose)</span><input id="senderName" maxlength="200" /></label>
           <div class="send-actions">
-            <button id="openMail" class="btn-primary btn-big" type="button"><span class="btn-ic">✉</span>Atidaryti paruoštą laišką</button>
-            <button id="downloadEml" class="btn-secondary" type="button">⭳ Atsisiųsti .eml</button>
-            <button id="copyText" class="btn-secondary" type="button">⧉ Kopijuoti tekstą</button>
+            <button id="submitOrder" class="btn-primary btn-big" type="button"><span class="btn-ic">✓</span>Pateikti užsakymą</button>
             <button id="printBoth2" class="btn-secondary" type="button">🖶 Sąskaita + gamybos lapas (1 PDF)</button>
           </div>
-          <p id="mailNote" class="fine-print mail-note" hidden></p>
-          <p class="fine-print"><strong>Vienas PDF failas:</strong> paspaudus „Atidaryti paruoštą laišką" (arba mygtuką „Sąskaita + gamybos lapas") spausdinimo lange išsaugokite VIENĄ PDF — jame bus ir <em>Sąskaita faktūra</em> (klientui), ir <em>Gamybos lapas</em> (operatorei, be kainų). Prisekite šį vieną failą prie atsidariusio laiško.<br>
-          Šis autonominis (be serverio) failas negali pats prisegti failų — tai naršyklės saugumo apribojimas, ne įrankio klaida.<br>
-          <strong>Kai kuriuose kompiuteriuose spausdinimo peržiūra šį du puslapius rodo netvarkingai</strong> (pvz. tuščias arba netaisyklingai išdėstytas lapas) — tai naršyklės peržiūros keistenybė, ne klaida. Pats išsaugotas PDF failas visada teisingas — jį verta patikrinti atidarant, o ne spręsti pagal peržiūros langą.</p>
-          <p class="fine-print">Jei prireiktų atskirų failų: <button id="printInvoice2" class="btn-link" type="button">tik sąskaita (PDF)</button> · <button id="printProd2" class="btn-link" type="button">tik gamybos lapas (PDF)</button></p>
-        </div>
-        <div class="send-preview">
-          <span class="eyebrow">Laiško tekstas (redaguojamas)</span>
-          <textarea id="messageBody" spellcheck="false"></textarea>
+          <p id="submitHint" class="fine-print submit-hint"></p>
+          <p class="fine-print">Užsakymas išsaugomas automatiškai po kiekvieno pakeitimo. Pateiktą užsakymą peržiūri administratorius; jo eigą matysite skiltyje „Užsakymai“.</p>
+          <p class="fine-print">Atskiri dokumentai: <button id="printInvoice2" class="btn-link" type="button">tik sąskaita (PDF)</button> · <button id="printProd2" class="btn-link" type="button">tik gamybos lapas (PDF)</button></p>
         </div>
       </div>
     </div>
@@ -181,15 +205,8 @@
 
 </div>
 
-<!-- Versijos numeris kamputyje (2026-09-21, užsakovo prašymu) — daug
-     žmonių testuoja vienu metu, sunku suprasti, kas su kuria versija dirba.
-     KEISTI ČIA kaskart didinant versiją (žr. README_LT.md paskutinę versiją). -->
-<div id="versionBadge" class="version-badge">v53</div>
+<!-- Katalogo versija kamputyje -->
+<div id="versionBadge" class="version-badge"></div>
 
-<script src="data.js"></script>
-<script src="glass.js"></script>
-<script src="prodsheet.js"></script>
-<script src="engine.js"></script>
-<script src="app.js"></script>
 </body>
 </html>

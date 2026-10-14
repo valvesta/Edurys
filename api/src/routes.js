@@ -12,6 +12,7 @@ const config = require('./config');
 const { sql, callProcedure } = require('./db');
 const { requireIdentity, requireUser, requireLevel } = require('./auth');
 const pricing = require('./pricing');
+const media = require('./media');
 
 const router = express.Router();
 const ADMIN = 30, REP = 20;
@@ -189,6 +190,13 @@ router.post('/admin/companies/:id/status', requireUser, requireLevel(ADMIN), wra
     ExpectedRevision: [sql.Int, int(b.revision, true)],
   });
   res.json({ ok: true });
+}));
+
+// ---------------------------------------------------------------- nuotraukos
+/* Laikinas tik skaitymo leidimas nuotraukų saugyklai (žr. media.js). */
+router.get('/media/config', requireUser, wrap(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await media.mediaConfig());
 }));
 
 // ---------------------------------------------------------------- katalogas

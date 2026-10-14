@@ -511,12 +511,13 @@ select.ui-select{
 
 /* ===== Užsakymo pozicijos veiksmų mygtukai ===== */
 .cr-actions{display:flex; flex-direction:column; gap:4px; align-items:stretch;}
-.cr-btn{
+/* .cart-row .cr-btn — kad nugalėtų bendrą .cart-row button taisyklę (anksčiau mygtukai atrodė kaip tekstas) */
+.cart-row .cr-btn{
   background:var(--paper-raised); border:1px solid var(--line-strong); color:var(--ink);
   font-size:11px; padding:5px 9px; border-radius:var(--radius); white-space:nowrap; text-align:center;
 }
-.cr-btn:hover{border-color:var(--terracotta); color:var(--terracotta-deep);}
-.cr-btn-del:hover{border-color:var(--red); color:var(--red-ink);}
+.cart-row .cr-btn:hover{border-color:var(--terracotta); color:var(--terracotta-deep);}
+.cart-row .cr-btn-del:hover{border-color:var(--red); color:var(--red-ink);}
 
 /* hidden atributas turi nugalėti display:flex/grid klases */
 [hidden]{display:none !important;}
@@ -588,3 +589,62 @@ select.ui-select{
 .psign{display:flex; gap:26px;} .psign div{min-width:150px;}
 .psign span{display:block; border-bottom:.6px solid #888; height:20px; margin-bottom:2px;}
 .plegend{font-size:6.4pt; color:#777; margin-top:3px;}
+
+/* ==========================================================================
+   SISTEMOS ELEMENTAI (2026-10, integracija į užsakymų sistemą)
+   Kraunama, užsakymo būsena, pateikimas. Spalvos — tie patys kintamieji.
+   ========================================================================== */
+.boot-overlay{
+  position:fixed; inset:0; z-index:2000; background:var(--paper);
+  display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.boot-box{text-align:center; max-width:460px;}
+.boot-brand{font-family:var(--font-display); font-size:24px; color:var(--ink); margin-bottom:10px;}
+.boot-box p{color:var(--ink-soft); font-size:14px; line-height:1.5; white-space:pre-line;}
+.boot-box p.boot-error{color:var(--danger-ink); background:var(--danger-bg); padding:10px 14px; border-radius:var(--radius);}
+.boot-actions{display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;}
+.boot-actions .btn-primary, .boot-actions .btn-secondary{width:auto; padding:10px 18px; text-decoration:none; display:inline-block;}
+
+.topbar-back{text-decoration:none; white-space:nowrap; margin-left:0;}
+.order-status{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12px; color:#fff8ef;
+  min-width:0; flex:1 1 auto;
+}
+.order-status .os-number{font-weight:700; white-space:nowrap;}
+.order-status .os-label{opacity:.9; white-space:nowrap;}
+.order-status .os-label::before{content:"·"; margin-right:8px; opacity:.7;}
+.order-status[data-state="error"] .os-label,
+.order-status[data-state="mismatch"] .os-label{background:#fff; color:var(--red-ink); padding:1px 8px; border-radius:8px; font-weight:700;}
+.order-status[data-state="error"] .os-label::before,
+.order-status[data-state="mismatch"] .os-label::before{content:none;}
+.order-status .os-message{flex-basis:100%; font-size:11px; color:#fff; opacity:.95;}
+.order-status .os-retry{background:#fff; color:var(--terracotta-deep); border:none; border-radius:var(--radius); font-size:11px; padding:3px 8px;}
+
+.panel-note{grid-column:1 / -1; margin:0; padding:8px 14px; background:var(--paper-raised); font-size:11px; color:var(--muted);}
+
+.edit-hint{
+  background:#e9f0e4; color:var(--sage-ink); font-size:11.5px; line-height:1.5;
+  padding:8px 10px; border-radius:var(--radius); margin-bottom:10px;
+}
+.edit-hint .btn-link{font-size:11.5px;}
+
+.send-grid{grid-template-columns:minmax(0, 720px);}
+.text-field textarea{
+  width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:var(--radius);
+  font-size:12.5px; font-family:var(--font-ui); background:var(--paper-raised); resize:vertical;
+}
+.submit-hint:empty{display:none;}
+.submit-hint{color:var(--danger-ink); background:var(--danger-bg); padding:8px 10px; border-radius:var(--radius);}
+
+.modal-buttons{display:flex; gap:10px;}
+.modal-buttons .btn-primary, .modal-buttons .btn-secondary{flex:1;}
+select.modal-input{font-family:var(--font-ui); font-size:14px; background:#fff;}
+
+@media print{
+  .boot-overlay, .order-status, .topbar-back{display:none !important;}
+}
+.bd-pending{font-size:12px; color:var(--ink-soft); background:var(--paper-sunk); padding:10px 12px; border-radius:var(--radius); margin-bottom:10px;}
+/* Viršutinė juosta: daugiau mygtukų nei anksčiau (grįžti, būsena) — leidžiame
+   persikelti į antrą eilutę, o ne laužyti mygtukų tekstą. */
+.topbar{flex-wrap:wrap; row-gap:8px; gap:16px;}
+.topbar .client-toggle{white-space:nowrap; margin-left:0;}

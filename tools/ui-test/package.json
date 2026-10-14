@@ -1,0 +1,14 @@
+{
+  "name": "durys-ui-test",
+  "private": true,
+  "description": "Konfigūratoriaus naršyklės testai: atitiktis originalui ir e2e su API",
+  "scripts": {
+    "equivalence": "node equivalence.js",
+    "e2e": "node e2e.js",
+    "test": "node equivalence.js && node e2e.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "playwright": "1.64.1"
+  }
+}

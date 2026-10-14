@@ -23,7 +23,7 @@ export async function ordersList(root, ctx) {
 
   const body = h('div', {}, loading());
   root.append(
-    pageHeader('Užsakymai'),
+    pageHeader('Užsakymai', h('a', { class: 'btn btn-primary', href: '/konfiguratorius/', 'data-role': 'new-order' }, '+ Naujas užsakymas')),
     h('div', { class: 'filters' }, status, search),
     body);
 
@@ -45,7 +45,7 @@ export async function ordersList(root, ctx) {
         { label: 'Atnaujinta', render: r => fmtDate(r.UpdatedAt) },
       ].filter(Boolean), data.items, {
         onRowClick: r => ctx.navigate('/uzsakymai/' + r.OrderId),
-        empty: 'Užsakymų nėra. Nauji užsakymai kuriami konfigūratoriuje.',
+        empty: 'Užsakymų nėra. Naujas užsakymas kuriamas konfigūratoriuje — mygtukas „+ Naujas užsakymas“.',
       }),
       pager(data.total, state, ctx));
   } catch (e) { body.replaceChildren(errorBox(e)); }
@@ -87,6 +87,9 @@ export async function orderDetail(root, ctx) {
       } catch (e) { toast(e.message, 'bad'); }
     },
   }, ACTION_LABEL[t.ToStatus] || t.ToStatusName));
+
+  // Juodraštį galima tęsti konfigūratoriuje (pakeisti, papildyti pozicijas)
+  if (o.IsEditable) actions.unshift(h('a', { class: 'btn', href: '/konfiguratorius/?uzsakymas=' + encodeURIComponent(o.OrderId), 'data-role': 'edit-in-configurator' }, 'Tęsti konfigūratoriuje'));
 
   root.replaceChildren(...[
     h('a', { href: '/uzsakymai', class: 'back', 'data-link': '' }, '← Užsakymai'),

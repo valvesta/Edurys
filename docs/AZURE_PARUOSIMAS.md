@@ -88,7 +88,7 @@ Siunčiama per **Microsoft Graph** iš bendros dėžutės (pvz. `uzsakymai@jupoj
 |---|---|
 | **Key Vault** `kv-durys-<env>` | Paslaptims, jei kada prireiks (pvz. trečiųjų šalių API raktai). RBAC režimas. |
 | **Application Insights** + **Log Analytics** | Klaidos, užklausų žurnalai, SQL auditas. |
-| **Storage Account** (Blob) | Durų nuotraukos (kai bus daugiau gamintojų). Public access išjungtas. |
+| **Storage Account** (Blob) `edurysfoto` | Durų nuotraukos, konteineris `images`, aplankas pagal gamintoją (`erkado/`). Anoniminė prieiga ir raktai išjungti. Programai — rolė *Storage Blob Data Reader* (Managed Identity); App Service nustatymas `MEDIA_ACCOUNT=edurysfoto` (konteineris pagal nutylėjimą `images`, kitaip — `MEDIA_CONTAINER`). Nuotraukas įkelti: `az storage blob upload-batch --account-name edurysfoto --destination images --destination-path erkado --source <aplankas> --auth-mode login` (reikia rolės *Storage Blob Data Contributor*). |
 | **Front Door + WAF** (vėliau) | Apsauga nuo atakų, kai sistema bus vieša. |
 
 ## 7. Diegimas iš GitHub

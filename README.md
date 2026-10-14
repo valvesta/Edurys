@@ -13,8 +13,9 @@ platforma/
 │  ├─ tools/             Migracijos, katalogo ištraukimas, importas ir patikra
 │  └─ tests/             Pilnas scenarijaus testas prieš tikrą SQL Server
 ├─ api/                  Node.js API (prisijungimas, procedūrų kvietimas, laiškai)
-├─ web/                  Vaizdas (čia perkelsime dabartinį newdemo)
-├─ catalog-sources/      Originalūs ERKADO duomenų failai (iš newdemo)
+├─ web/                  Vaizdas: administravimas (js/) ir konfigūratorius (konfiguratorius/)
+├─ catalog-sources/      Originalūs ERKADO failai (iš newdemo) — duomenys ir sąsaja (palyginimui)
+├─ tools/ui-test/        Konfigūratoriaus naršyklės testai (atitiktis originalui, e2e)
 ├─ docs/                 Architektūra, Azure paruošimas, saugumas, radiniai
 └─ .github/workflows/    Automatinė patikra (CI)
 ```
@@ -60,8 +61,10 @@ EXEC admin.Bootstrap_GlobalAdmin @Email = N'vardas@jupoja.lt', @DisplayName = N'
 | Kainų skaičiavimas serveryje | ✅ tas pats engine.js; dešimtys tūkstančių konfigūracijų sutampa iki cento |
 | API | ✅ |
 | Azure DEV aplinka ir automatinis diegimas | ✅ paruošta — žr. `infra/README.md` |
-| Naudotojo sąsaja (prisijungimas, administravimas, užsakymai) | ⏳ kitas etapas |
-| Klientų prisijungimas (External ID), paštas | ⏳ kai bus sąsaja |
+| Naudotojo sąsaja (prisijungimas, administravimas, užsakymai) | ✅ |
+| Konfigūratorius sistemoje (katalogas iš DB, užsakymų saugojimas) | ✅ žr. `docs/KONFIGURATORIUS.md` |
+| Nuotraukos privačioje Azure saugykloje | ✅ |
+| Klientų prisijungimas (External ID), paštas | ⏳ kitas etapas |
 
 ## Kainų tikslumas
 

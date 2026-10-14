@@ -26,3 +26,19 @@
 ## Paštas
 - Graph `Mail.Send` apribota viena bendra dėžute (Exchange RBAC for Applications).
 - Visi duomenys laiškų šablonuose HTML-išvalomi.
+
+## Nuotraukos
+
+- Saugykla privati: anoniminė prieiga ir prieigos raktai **išjungti**, tik TLS 1.2+.
+- Programa savo tapatybe (Managed Identity, *Storage Blob Data Reader*) gauna naudotojo delegavimo raktą
+  ir pasirašo **tik skaitymo** leidimą (SAS) konteineriui `images`, galiojantį 2 val., tik HTTPS.
+  Leidimas be sąrašo, rašymo ar trynimo teisių.
+- Leidimą gauna tik prisijungę naudotojai (`GET /api/media/config`); naršyklė jį atnaujina prieš pasibaigiant.
+- Naršyklės saugumo politika (CSP) leidžia paveikslėlius tik iš sistemos ir šios saugyklos.
+
+## Konfigūratorius
+
+- Naršyklė siunčia tik pasirinkimus; kainas, PVM ir sumas apskaičiuoja serveris ir DB.
+  Naršyklės rodoma suma tik palyginama — nesutapus, pateikti neleidžiama.
+- Kainų variklio failai tiekiami iš serverio (tie patys, kurie skaičiuoja kainas), tik išvardyti failai.
+- HTML viduje jokio vykdomo kodo (CSP `script-src 'self'`); naudotojų tekstai įterpiami išvalyti (`esc()`).

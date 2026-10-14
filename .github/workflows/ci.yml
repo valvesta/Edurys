@@ -9,6 +9,10 @@
 #                importas su patikra ir pilnas scenarijaus testas
 #                (teisės, statusai, PVM, istorija, laiškų eilė).
 #  3. api      — API testai be duomenų bazės.
+#  4. ui       — konfigūratorius naršyklėje: (a) atitiktis originaliam
+#                newdemo konfigūratoriui (tūkstančiai atsitiktinių veiksmų,
+#                lyginamas visas turinys, sąskaita, gamybos lapas);
+#                (b) e2e: naršyklė -> tikras API -> DB imitacija.
 #
 # Diegimas į Azure — atskiras workflow (deploy.yml), kai bus sukurti resursai.
 # ==========================================================================
@@ -98,3 +102,23 @@ jobs:
         working-directory: api
       - run: npm test
         working-directory: api
+
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: 22 }
+      - run: npm ci
+        working-directory: api
+      - run: npm ci
+        working-directory: tools/ui-test
+      - name: Chromium naršyklė
+        working-directory: tools/ui-test
+        run: npx playwright install --with-deps chromium
+      - name: Atitiktis originaliam konfigūratoriui
+        working-directory: tools/ui-test
+        run: ../../.github/scripts/run.sh node equivalence.js 120
+      - name: Konfigūratorius nuo galo iki galo (naršyklė -> API)
+        working-directory: tools/ui-test
+        run: ../../.github/scripts/run.sh node e2e.js

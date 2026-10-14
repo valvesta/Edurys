@@ -46,6 +46,18 @@ function webAuth(providers) {
 }
 const authProviders = loadProviders();
 
+function mediaAccount() {
+  const v = process.env.MEDIA_ACCOUNT;
+  if (!v) return null;
+  if (!/^[a-z0-9]{3,24}$/.test(v)) throw new Error('MEDIA_ACCOUNT: saugyklos vardas — 3–24 mažosios raidės ar skaičiai');
+  return v;
+}
+function mediaContainer() {
+  const v = process.env.MEDIA_CONTAINER || 'images';
+  if (!/^[a-z0-9](?:[a-z0-9]|-(?=[a-z0-9])){2,62}$/.test(v)) throw new Error('MEDIA_CONTAINER: neteisingas konteinerio vardas');
+  return v;
+}
+
 module.exports = {
   port: Number(process.env.PORT || 8080),
   appBaseUrl: req('APP_BASE_URL').replace(/\/+$/, ''),
@@ -58,6 +70,13 @@ module.exports = {
   },
   mail: {
     senderMailbox: process.env.MAIL_SENDER || null,   // pvz. uzsakymai@jupoja.lt (bendra dėžutė)
+  },
+  /* Nuotraukos: Azure saugyklos (Storage Account) vardas ir konteineris.
+     MEDIA_DEV_DIR — tik kūrimo aplinkai (produkcijoje ignoruojamas). */
+  media: {
+    account: mediaAccount(),
+    container: mediaContainer(),
+    devDir: process.env.NODE_ENV !== 'production' ? (process.env.MEDIA_DEV_DIR || null) : null,
   },
   isProduction: process.env.NODE_ENV === 'production',
 };
