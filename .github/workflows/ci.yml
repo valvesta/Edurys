@@ -26,8 +26,8 @@ jobs:
   catalog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22 }
       - name: Paketas sugeneruojamas iš šaltinių identiškai
         run: |
@@ -46,8 +46,8 @@ jobs:
       DB_USER: sa
       DB_TRUST_CERT: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22 }
       - name: Laikinas slaptažodis (tik šiam konteineriui)
         run: echo "DB_PASSWORD=Ci-$(openssl rand -hex 16)-Aa1!" >> "$GITHUB_ENV"
@@ -66,25 +66,25 @@ jobs:
           done
       - name: Migracijos
         working-directory: db
-        run: node tools/migrate.js
+        run: ../.github/scripts/run.sh node tools/migrate.js
       - name: Pakartotinis paleidimas nieko nekeičia
         working-directory: db
         run: node tools/migrate.js | tee /tmp/second.txt && ! grep -q '^  +' /tmp/second.txt
       - name: ERKADO katalogo importas su patikra ir paskelbimas
         working-directory: db
-        run: node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --publish --source ../catalog-sources/erkado/2026-I
+        run: ../.github/scripts/run.sh node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --publish --source ../catalog-sources/erkado/2026-I
       - name: Pakartotinis to paties katalogo importas atmetamas
         working-directory: db
         run: "! node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --source ../catalog-sources/erkado/2026-I"
       - name: Scenarijaus testai
         working-directory: db
-        run: npm test
+        run: ../.github/scripts/run.sh npm test
 
   api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: 22 }
       - run: npm ci
         working-directory: api
