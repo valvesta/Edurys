@@ -6,7 +6,8 @@
    baigiasi klaida. Paskelbiama tik su --publish ir tik jei patikra praėjo.
 
    Naudojimas:
-     node db/tools/import-catalog.js <paketas.json> [--publish] [--source <aplankas>]
+     node db/tools/import-catalog.js <paketas.json> [--publish] [--if-missing] [--source <aplankas>]
+     --if-missing: jei ta versija jau yra ir turinys sutampa — nieko nedaro
    ========================================================================== */
 'use strict';
 
@@ -42,6 +43,22 @@ async function main() {
   const pool = await connect();
   let versionId;
   try {
+    if (process.argv.includes('--if-missing')) {
+      const f = await pool.request()
+        .input('ManufacturerCode', sql.VarChar(50), bundle.manufacturer.code)
+        .input('VersionCode', sql.VarChar(50), bundle.catalogVersion.code)
+        .execute('admin.Catalog_FindVersion');
+      const ex = f.recordset[0];
+      if (ex) {
+        if (ex.BundleSha256 !== sha) {
+          throw new Error(`Versija ${bundle.catalogVersion.code} jau importuota, bet su KITU turiniu (SHA nesutampa). ` +
+            'Paskelbto katalogo keisti negalima — pakeistam katalogui suteikite naują versijos kodą.');
+        }
+        if (publish && ex.Status === 'DRAFT') throw new Error(`Versija ${bundle.catalogVersion.code} yra juodraštis — patikrinkite ir paskelbkite rankiniu būdu.`);
+        console.log(`Versija ${bundle.catalogVersion.code} jau yra (${ex.Status}), turinys sutampa — nieko nekeista.`);
+        return;
+      }
+    }
     const r = await pool.request()
       .input('BundleJson', sql.NVarChar(sql.MAX), text)
       .input('ImportedBy', sql.NVarChar(200), importedBy)

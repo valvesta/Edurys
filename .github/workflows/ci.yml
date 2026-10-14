@@ -76,6 +76,9 @@ jobs:
       - name: Pakartotinis to paties katalogo importas atmetamas
         working-directory: db
         run: "! node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --source ../catalog-sources/erkado/2026-I"
+      - name: Importas su --if-missing — jau esantis katalogas paliekamas
+        working-directory: db
+        run: node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --publish --if-missing --source ../catalog-sources/erkado/2026-I | grep -q 'nieko nekeista'
       - name: Scenarijaus testai
         working-directory: db
         run: ../.github/scripts/run.sh npm test

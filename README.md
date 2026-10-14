@@ -53,11 +53,19 @@ EXEC admin.Bootstrap_GlobalAdmin @Email = N'vardas@jupoja.lt', @DisplayName = N'
 
 | Dalis | Būsena |
 |---|---|
-| DB schema, teisės, procedūros | ✅ paruošta, testuojama CI |
-| ERKADO katalogo perkėlimas | ✅ patikrinta: visos kainos sutampa su originalu |
+| DB schema, teisės, procedūros | ✅ testuojama tikrame SQL Server (CI) |
+| ERKADO katalogo perkėlimas | ✅ visos kainos sutampa su originalu |
 | Įmonių užklausos, kvietimai, rolės | ✅ |
 | Užsakymai, statusai, istorija, laiškų eilė | ✅ |
-| API karkasas | ✅ (be kainų skaičiavimo serveryje) |
-| Kainų skaičiavimas serveryje (engine.js + DB) | ⏳ kitas etapas |
-| Vaizdo perkėlimas į `web/`, šablonų atskyrimas | ⏳ kitas etapas |
-| Diegimas į Azure | ⏳ kai bus sukurti resursai (žr. `docs/AZURE_PARUOSIMAS.md`) |
+| Kainų skaičiavimas serveryje | ✅ tas pats engine.js; dešimtys tūkstančių konfigūracijų sutampa iki cento |
+| API | ✅ |
+| Azure DEV aplinka ir automatinis diegimas | ✅ paruošta — žr. `infra/README.md` |
+| Naudotojo sąsaja (prisijungimas, administravimas, užsakymai) | ⏳ kitas etapas |
+| Klientų prisijungimas (External ID), paštas | ⏳ kai bus sąsaja |
+
+## Kainų tikslumas
+
+`api/test/pricing-parity.test.js` lygina serverio variklį (katalogas iš DB) su originaliu
+konfigūratoriumi (`data.js` + `glass.js` + `engine.js`): pasirinkimų sutvarkymą, klaidas, kainą,
+priedus ir sąskaitos eilutes. CI tai daro du kartus — su paketu iš failo ir su katalogu,
+išeksportuotu iš tikros duomenų bazės. Didesnis patikrinimas: `PARITY_SCENARIOS=20000 npm test` (api/).
