@@ -252,7 +252,9 @@ CREATE TABLE catalog.RuleDataset (
     ContentSha256     char(64)       NOT NULL,
     SortOrder         int            NOT NULL,
     CONSTRAINT PK_RuleDataset PRIMARY KEY (CatalogVersionId, DatasetCode),
-    CONSTRAINT CK_RuleDataset_Json CHECK (ISJSON(ContentJson) = 1)
+    -- Rinkinys gali būti ir pavienė reikšmė (pvz. 51.6). SQL Server ISJSON tokios
+    -- nelaiko JSON dokumentu, todėl tikriname ją įvilkę į objektą.
+    CONSTRAINT CK_RuleDataset_Json CHECK (ISJSON(N'{"v":' + ContentJson + N'}') = 1)
 );
 GO
 
