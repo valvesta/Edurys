@@ -12,13 +12,19 @@ Visas darbas užtrunka apie 15 minučių. Slaptažodžių niekam perduoti nereik
    bash azure-dev.sh
    ```
 4. Skriptas paklaus, ar tęsti su šia prenumerata — atsakykite `t`.
-5. Pabaigoje bus išvestas sąrašas „Šias reikšmes reikia įrašyti GitHub'e". **Nukopijuokite jį Claude** —
-   tai ne slaptažodžiai, jis įrašys juos į GitHub pats.
+5. Pabaigoje bus išvestas sąrašas „Šias reikšmes reikia įrašyti GitHub'e" (tai ne slaptažodžiai).
+
+## 2. Įrašykite reikšmes GitHub'e
+
+1. https://github.com/valvesta/Edurys/settings/environments → **New environment** → pavadinimas `dev` → **Configure environment**.
+2. Skiltyje **Environment variables** → **Add environment variable** — kiekvienai iš 9 eilučių
+   (pvz. vardas `AZURE_CLIENT_ID`, reikšmė — iš skripto išvesties).
+3. **Actions** → **Deploy dev** → **Run workflow**. Po kelių minučių sistema veiks Azure'e.
 
 Reikalingos teisės: prenumeratoje — *Owner* (arba *Contributor* + *User Access Administrator*),
 Entra ID — teisė kurti programų registracijas (numatytai turi visi naudotojai, nebent išjungta).
 
-## 2. Kas vyks toliau automatiškai
+## 3. Kas vyks toliau automatiškai
 
 Kai GitHub'e bus įrašyti kintamieji, kiekvienas sėkmingas pakeitimas `main` šakoje:
 1. įvykdys naujas DB migracijas;
@@ -27,7 +33,7 @@ Kai GitHub'e bus įrašyti kintamieji, kiekvienas sėkmingas pakeitimas `main` �
 4. įkels ERKADO katalogą su pilna patikra (tik pirmą kartą);
 5. įdiegs programą ir patikrins, kad ji atsako.
 
-## 3. Vėliau (ne dabar)
+## 4. Vėliau (ne dabar)
 
 | Kas | Kada |
 |---|---|

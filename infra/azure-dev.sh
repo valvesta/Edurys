@@ -242,7 +242,8 @@ rm -rf "$WORK"
 say "PARUOŠTA. Šias reikšmes reikia įrašyti GitHub'e"
 cat <<OUT
 
-  GitHub -> valvesta/Edurys -> Settings -> Environments -> „dev" -> Environment variables:
+  GitHub -> valvesta/Edurys -> Settings -> Environments -> New environment -> pavadinimas: dev
+  -> Environment variables -> Add variable (kiekvienai eilutei):
 
     AZURE_CLIENT_ID        = ${DEPLOY_APP_ID}
     AZURE_TENANT_ID        = ${TENANT_ID}
@@ -254,7 +255,7 @@ cat <<OUT
     BOOTSTRAP_ADMIN_EMAIL  = ${ME_MAIL}
     BOOTSTRAP_ADMIN_OID    = ${ME_OID}
 
-  (Tai ne slaptažodžiai — galite juos tiesiog nukopijuoti Claude, jis įrašys pats.)
+  (Tai ne slaptažodžiai. Įrašę — Actions -> Deploy dev -> Run workflow.)
 
   Sistemos adresas: ${APP_URL}
 OUT
