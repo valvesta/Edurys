@@ -79,6 +79,11 @@ jobs:
       - name: Scenarijaus testai
         working-directory: db
         run: ../.github/scripts/run.sh npm test
+      - name: Kainų sutapimas su katalogu IŠ DUOMENŲ BAZĖS (serverio variklis vs originalas)
+        run: |
+          (cd db && node tools/export-catalog.js ERKADO /tmp/erkado-from-db.json)
+          cd api && npm ci
+          PARITY_BUNDLE=/tmp/erkado-from-db.json PARITY_SCENARIOS=10000 ../.github/scripts/run.sh node --test test/pricing-parity.test.js
 
   api:
     runs-on: ubuntu-latest

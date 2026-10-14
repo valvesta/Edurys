@@ -253,19 +253,35 @@ router.put('/orders/:id/header', requireUser, wrap(async (req, res) => {
 }));
 
 /* Eilutės: naršyklė siunčia TIK pasirinkimus (šeima, modelis, pasirinkimai,
-   kiekis). Kainas apskaičiuoja serveris (pricing.js) — naršyklės atsiųstos
-   kainos ignoruojamos. */
+   kiekis). Kainas apskaičiuoja serveris (pricing.js) pagal UŽSAKYMO katalogo
+   versiją (ne pagal naršyklės nurodytą) — naršyklės kainos ignoruojamos.
+   Body: { revision, lines: [{ familyKey, modelNo, quantity, selections }] } */
 router.put('/orders/:id/lines', requireUser, wrap(async (req, res) => {
   const b = req.body || {};
+  const orderId = int(req.params.id, true);
+  const revision = int(b.revision, true);
   if (!Array.isArray(b.lines) || b.lines.length > 200) throw badRequest('Eilutės turi būti masyvas (iki 200).');
-  const priced = await pricing.priceLines(int(b.catalogVersionId, true), b.lines);
+  const o = await callProcedure('api.Order_Get', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    OrderId: [sql.Int, orderId],
+  });
+  const header = o.recordsets[0][0];
+  const priced = await pricing.priceLines(req.user.UserId, header.CatalogVersionId, b.lines);
   const r = await callProcedure('api.Order_SaveLines', {
     ActorUserId: [sql.Int, req.user.UserId],
-    OrderId: [sql.Int, int(req.params.id, true)],
-    ExpectedRevision: [sql.Int, int(b.revision, true)],
+    OrderId: [sql.Int, orderId],
+    ExpectedRevision: [sql.Int, revision],
     LinesJson: [sql.NVarChar(sql.MAX), JSON.stringify(priced)],
   });
   res.json(r.recordset[0]);
+}));
+
+/* Kainos peržiūra (neįrašant): ta pati serverio kaina, kuri būtų įrašyta. */
+router.post('/catalog/versions/:id/quote', requireUser, wrap(async (req, res) => {
+  const b = req.body || {};
+  const [line] = await pricing.priceLines(req.user.UserId, int(req.params.id, true), [b]);
+  const net = Math.round(line.priceBreakdown.reduce((s, x) => s + Math.round(x.sum * 100), 0)) / 100;
+  res.json({ ...line, netTotal: net });
 }));
 
 router.post('/orders/:id/status', requireUser, wrap(async (req, res) => {

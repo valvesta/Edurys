@@ -241,3 +241,28 @@ test('10. laiškų eilė: paėmimas, išsiuntimas, jautrių duomenų išvalymas'
   assert.equal(after.recordset[0].PayloadJson, null);
   await expectSqlError(exec('api.Email_MarkSent', { EmailId: inv.EmailId, WorkerId: w }), 51003);
 });
+
+test('11. pilnas kelias: serverio variklis (katalogas iš DB) -> api.Order_SaveLines', async () => {
+  const { createRuntime } = require('../../api/src/engines/erkado/runtime');
+  const g = await exec('api.Catalog_GetVersion', { ActorUserId: S.userId, CatalogVersionId: S.versionId });
+  const rt = createRuntime(JSON.parse(g.recordset[0].BundleJson));
+  const base = { DIRECTION: 'LEFT', LOCK: 'LATCH_BSR', HARDWARE_COLOR: 'STANDARD' };
+  const lines = [
+    rt.priceLine({ familyKey: 'WERBENA', modelNo: 4, quantity: 2,
+      selections: { ...base, WIDTH: '80', DECOR: 'CPL_WHITE', STAKTA_CHOICE: 'ADJUSTABLE_STANDARD', STAKTA_RANGE: '100-120' } }, 1),
+    rt.priceLine({ familyKey: 'PANEL_ALTAMURA', modelNo: 1, quantity: 1,
+      selections: { ...base, WIDTH: '90', DECOR: 'GREKO_OAK', STAKTA_CHOICE: 'NONE', HANDLE_FAMILY: 'CUBE', HANDLE_FINISH: 'BLACK_MATTE' } }, 2),
+  ];
+  const c = await exec('api.Order_CreateDraft', { ActorUserId: S.userId, CatalogVersionId: S.versionId });
+  const s = await exec('api.Order_SaveLines', { ActorUserId: S.userId, OrderId: c.recordset[0].OrderId, ExpectedRevision: 1,
+    LinesJson: JSON.stringify(lines) });
+  // Tikimasi suma: eilučių sumos centais, PVM kiekvienai eilutei atskirai (tiksliai)
+  let net = 0, vat = 0;
+  for (const l of lines) {
+    const ln = l.priceBreakdown.reduce((a, x) => a + Math.round(x.sum * 100), 0);
+    net += ln; vat += Math.floor((ln * 21 + 50) / 100);
+  }
+  assert.equal(Math.round(Number(s.recordset[0].NetTotal) * 100), net);
+  assert.equal(Math.round(Number(s.recordset[0].VatTotal) * 100), vat);
+  assert.ok(net > 0);
+});
