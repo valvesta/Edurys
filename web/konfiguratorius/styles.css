@@ -1,0 +1,590 @@
+/* ==========================================================================
+   ERKADO VIDAUS — dizaino sistema
+   Paletė ir tipografija grįsta pačiu produktu: šiltas tinkuotas fonas ir
+   rašalo tekstas primena MDF/HDF apdailos technines korteles, raudona -
+   tikra ERKADO logotipo spalva, šalavijas paimtas iš WERBENA durų atspalvio.
+   Pasirinktos kortelės pažymimos trimis brūkšneliais - katalogo aprašymuose
+   kiekviena varčia turi lygiai tris vyrius (furnitūros skiltis).
+   ========================================================================== */
+
+:root{
+  --ink:#2b2318; --ink-soft:#544a3a;
+  --paper:#f7f0e2; --paper-raised:#fffbf3; --paper-sunk:#efe2c8;
+  --line:#e6d7b3; --line-strong:#d1b787;
+  --terracotta:#c96b3f; --terracotta-deep:#a34f2b; --terracotta-tint:#f0dcc9;
+  --red:#c1392b; --red-ink:#8e2a1f;
+  --sage:#7c9070; --sage-ink:#54633f;
+  --muted:#93815f;
+  --danger-bg:#f8ddd2; --danger-ink:#96341f;
+  --info-bg:#fbe8b8; --info-ink:#7a5a12;
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-data:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --radius:3px;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper); color:var(--ink); font-family:var(--font-ui);
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0; color:var(--ink);}
+button{font-family:var(--font-ui); cursor:pointer;}
+input{font-family:var(--font-ui);}
+::selection{background:var(--sage); color:#fff;}
+
+.eyebrow{
+  font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--muted);
+  font-weight:600; display:block;
+}
+
+/* ---- hinge-mark signature: three tick marks, echoes the door's 3 hinges ---- */
+.hinge-mark{position:relative;}
+.hinge-mark::before{
+  content:""; position:absolute; left:0; top:14%; bottom:14%; width:3px;
+  background:repeating-linear-gradient(to bottom, var(--terracotta) 0 8px, transparent 8px 26px);
+  opacity:0; transition:opacity .15s;
+}
+.hinge-mark.is-selected::before, .hinge-mark:hover::before{opacity:1;}
+
+/* ================= topbar ================= */
+.topbar{
+  display:flex; align-items:center; gap:24px; padding:14px 28px;
+  background:var(--terracotta); color:#fff8ef; position:sticky; top:0; z-index:20;
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-mark{display:flex; gap:3px;}
+.brand-mark i{width:3px; height:20px; background:#fff; opacity:.85; display:block;}
+.brand-text strong{font-family:var(--font-display); font-size:18px; letter-spacing:.02em; color:#fff;}
+.brand-text em{display:block; font-style:normal; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:#ffe4d1; margin-top:-2px;}
+.topbar-tabs{display:flex; gap:4px; margin-left:12px;}
+.tab{
+  background:none; border:none; color:#ffe4d1; padding:8px 14px; border-radius:var(--radius);
+  font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px;
+}
+.tab.active{background:rgba(255,255,255,.2); color:#fff;}
+.tab-count{
+  background:#fff; color:var(--terracotta-deep); font-size:11px; padding:1px 7px; border-radius:10px; font-family:var(--font-data); font-weight:700;
+}
+.client-toggle{
+  margin-left:auto; background:none; border:1px solid rgba(255,255,255,.5); color:#fff; padding:7px 14px;
+  border-radius:var(--radius); font-size:12px;
+}
+.client-toggle:hover{border-color:#fff; background:rgba(255,255,255,.12);}
+
+.client-panel{
+  display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--line);
+  border-bottom:1px solid var(--line-strong);
+}
+.client-panel label{background:var(--paper-raised); padding:10px 14px; display:flex; flex-direction:column; gap:4px;}
+.client-panel span{font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);}
+.client-panel input{border:none; background:none; font-size:13px; padding:0; color:var(--ink);}
+.client-panel input:focus{outline:none;}
+
+/* ================= layout ================= */
+.layout{display:grid; grid-template-columns:250px 1fr 280px; gap:0; align-items:start;}
+
+.family-rail{
+  border-right:1px solid var(--line); padding:20px 16px; position:sticky; top:57px;
+  height:calc(100vh - 57px); overflow-y:auto;
+}
+.rail-heading p{font-size:12px; color:var(--muted); margin:6px 0 14px; line-height:1.5;}
+.search-row input{
+  width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:var(--radius);
+  background:var(--paper-raised); font-size:13px; margin-bottom:12px;
+}
+.search-row input:focus{outline:none; border-color:var(--sage);}
+.family-list{display:flex; flex-direction:column; gap:2px;}
+
+/* Sutraukiamos linijų grupės šoninėje juostoje (2026-09-11) */
+.rail-group{margin-bottom:6px;}
+.rail-group-head{
+  width:100%; display:flex; align-items:center; gap:8px; cursor:pointer;
+  padding:8px 6px; background:none; border:none; border-bottom:1px solid var(--line);
+  font-family:inherit; font-size:12px; font-weight:700; letter-spacing:.03em;
+  text-transform:uppercase; color:var(--ink); text-align:left;
+}
+.rail-group-head:hover{background:var(--paper-sunk);}
+.rg-caret{font-size:10px; color:var(--muted); transition:transform .15s ease; display:inline-block;}
+.rail-group.open .rg-caret{transform:rotate(90deg);}
+.rg-title{flex:1;}
+.rg-count{
+  font-family:var(--font-data); font-size:11px; font-weight:600; color:var(--muted);
+  background:var(--paper-sunk); border-radius:9px; padding:1px 7px; text-transform:none;
+}
+.rail-group > .family-list{display:none; padding-top:6px;}
+.rail-group.open > .family-list{display:flex;}
+.rg-empty{font-size:11.5px; color:var(--muted); padding:6px;}
+.family-item{
+  display:flex; align-items:center; gap:10px; padding:8px 8px; border-radius:var(--radius);
+  border:none; background:none; text-align:left; width:100%;
+}
+.family-item img{width:34px; height:46px; object-fit:cover; border-radius:2px; background:var(--paper-sunk); flex-shrink:0;}
+.family-item .fi-name{font-weight:600; font-size:13px; display:block;}
+.family-item .fi-meta{font-size:11px; color:var(--muted); display:block;}
+.family-item:hover{background:var(--paper-sunk);}
+.family-item.active{background:var(--terracotta);}
+.family-item.active .fi-name{color:#fff;}
+.family-item.active .fi-meta{color:#ffe4d1;}
+.rail-pending{margin-top:20px; padding-top:16px; border-top:1px solid var(--line);}
+.rail-pending p{font-size:11.5px; color:var(--muted); line-height:1.7; margin:6px 0 0;}
+
+.stage{padding:20px 28px; min-width:0;}
+
+.hero{
+  position:relative; border-radius:var(--radius); overflow:hidden; height:220px;
+  background:var(--terracotta-deep); margin-bottom:22px;
+}
+.hero-media{position:absolute; inset:0; background-size:cover; background-position:center; opacity:.8;}
+.hero::after{content:""; position:absolute; inset:0; background:linear-gradient(100deg, rgba(107,45,20,.88) 0%, rgba(163,79,43,.55) 45%, rgba(201,107,63,.12) 100%);}
+.hero-copy{position:relative; z-index:2; padding:24px 28px; height:100%; display:flex; flex-direction:column; justify-content:center;}
+.hero-copy .eyebrow{color:#ffd9bd;}
+.hero-copy h1{color:#fff; font-size:38px; margin:4px 0 6px;}
+.hero-copy p{color:#ffe4d1; font-size:12px; margin:0;}
+
+.step-head{display:flex; align-items:baseline; gap:12px; margin-bottom:12px;}
+.step-index{
+  font-family:var(--font-data); font-size:11px; color:var(--muted); border:1px solid var(--line-strong);
+  border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+}
+.step-head h2{font-size:15px; font-weight:600; font-family:var(--font-ui);}
+.step-sub{margin-left:auto; font-size:12px; color:var(--muted);}
+
+.model-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:10px; margin-bottom:24px;}
+.model-card{
+  border:1px solid var(--line); background:var(--paper-raised); border-radius:var(--radius); padding:8px;
+  display:flex; flex-direction:column; align-items:center; gap:6px; position:relative; padding-left:12px;
+}
+.model-card img{width:100%; height:76px; object-fit:contain;}
+.model-card .mc-name{font-size:11.5px; font-weight:600;}
+.model-card .mc-price{font-size:10.5px; color:var(--muted); font-family:var(--font-data);}
+.model-card.is-selected{border-color:var(--terracotta); box-shadow:0 1px 0 var(--terracotta);}
+
+.picked{
+  display:flex; gap:18px; padding:16px; background:var(--paper-raised); border:1px solid var(--line);
+  border-radius:var(--radius); margin-bottom:20px;
+}
+.picked img{width:90px; height:150px; object-fit:contain; background:var(--paper-sunk); border-radius:2px;}
+.picked-crumbs{font-size:11px; color:var(--muted); margin-bottom:4px;}
+.picked-copy h2{font-size:22px;}
+.picked-note{font-size:12.5px; color:var(--ink-soft); margin:6px 0;}
+.picked-price{font-family:var(--font-data); font-size:13px; color:var(--sage-ink); font-weight:600;}
+.picked-intarsia{margin-top:10px; padding:8px 10px; background:var(--terracotta-tint); border:1px solid var(--terracotta); border-radius:2px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.picked-intarsia .pi-badge{font-size:12px; font-weight:700; color:var(--terracotta-deep, var(--terracotta));}
+.picked-intarsia .pi-price{font-size:11px; color:var(--muted);}
+.picked-intarsia select{flex:1; min-width:180px;}
+
+#messages{margin-bottom:16px;}
+.message{padding:9px 14px; border-radius:var(--radius); font-size:12.5px; margin-bottom:6px;}
+.message.info{background:var(--info-bg); color:var(--info-ink);}
+.message.error{background:var(--danger-bg); color:var(--danger-ink);}
+
+.groups{display:flex; flex-direction:column; gap:18px;}
+
+/* ===== Moduliai (4 dalys pagal 2026-09-01 pastabas) ===== */
+.module{border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+.module-head{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line);}
+.module-num{
+  width:26px; height:26px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-data); font-size:12px; font-weight:700;
+  background:var(--terracotta); color:#fff;
+}
+.module-head h2{font-family:var(--font-display); font-size:17px; margin:0; line-height:1.2;}
+.module-head p{font-size:11.5px; color:var(--muted); margin:2px 0 0;}
+.module-body{padding:14px 16px 16px; display:flex; flex-direction:column; gap:14px;}
+.module-body .group-card{background:var(--paper-raised);}
+
+/* Švelnūs, bet aiškiai skirtingi modulių atspalviai */
+.mod-door   { background:#fdf6ec; }
+.mod-door   .module-head{background:#f8ead8;}
+.mod-frame  { background:#f2f5ef; }
+.mod-frame  .module-head{background:#e5ece0;}
+.mod-frame  .module-num{background:var(--sage);}
+.mod-handle { background:#f4f1f7; }
+.mod-handle .module-head{background:#e9e3ef;}
+.mod-handle .module-num{background:#7c6a91;}
+.mod-trim   { background:#f6f2ea; }
+.mod-trim   .module-head{background:#ece4d5;}
+.mod-trim   .module-num{background:#a08862;}
+.group-card{border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px; background:var(--paper-raised);}
+.group-card h3{font-size:13px; font-weight:600; margin-bottom:12px; font-family:var(--font-ui);}
+.attr-block{margin-bottom:14px;}
+.attr-block:last-child{margin-bottom:0;}
+
+/* Įspėjimas, kai spynos ir furnitūros spalvos nesutampa (2026-09-10, (b) variantas) */
+.hw-mismatch{
+  background:var(--info-bg); color:var(--info-ink);
+  padding:7px 10px; border-radius:var(--radius);
+  font-size:11.5px; line-height:1.45;
+}
+.attr-label{font-size:11.5px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between;}
+.pill-row{display:flex; flex-wrap:wrap; gap:6px;}
+.pill{
+  border:1px solid var(--line-strong); background:var(--paper-raised); padding:6px 12px; border-radius:20px;
+  font-size:12.5px; color:var(--ink);
+}
+.pill.selected{background:var(--terracotta); color:#fff; border-color:var(--terracotta);}
+.pill:disabled{opacity:.35; text-decoration:line-through; cursor:not-allowed;}
+.pill.width{min-width:38px; text-align:center; padding:6px 8px;}
+
+.decor-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px;}
+.decor-card{
+  border:1px solid var(--line-strong); background:var(--paper-raised); border-radius:var(--radius);
+  padding:8px; display:flex; gap:8px; align-items:center; text-align:left; padding-left:12px;
+}
+.decor-swatch{width:22px; height:22px; border-radius:3px; flex-shrink:0; border:1px solid rgba(0,0,0,.15);}
+.decor-card span{font-size:11.5px; line-height:1.25;}
+.decor-card small{display:block; font-size:9.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;}
+.decor-card.selected{border-color:var(--terracotta); background:var(--terracotta-tint);}
+.decor-card:disabled{opacity:.3; cursor:not-allowed;}
+
+.glass-grid{display:flex; flex-direction:column; gap:6px;}
+.glass-option{
+  display:flex; justify-content:space-between; align-items:center; padding:9px 12px;
+  border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--paper-raised); text-align:left;
+}
+.glass-option strong{font-size:12.5px; font-weight:500;}
+.glass-option span{font-family:var(--font-data); font-size:12px; color:var(--muted);}
+.glass-option.selected{border-color:var(--terracotta); background:var(--terracotta-tint);}
+
+.stakta-sub{font-size:11.5px; color:var(--muted); margin:-6px 0 14px;}
+.stakta-fields{margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-strong);}
+.stakta-price-row{display:flex; justify-content:space-between; padding:8px 12px; background:var(--terracotta-tint); border-radius:var(--radius); font-size:12.5px; margin-bottom:12px;}
+.stakta-price-row strong{font-family:var(--font-data); color:var(--terracotta-deep);}
+.stakta-price-row.stakta-warn{background:var(--danger-bg);}
+.stakta-price-row.stakta-warn strong{color:var(--danger-ink); font-family:var(--font-ui); font-size:11px;}
+.stakta-note{display:block; font-size:10.5px; color:var(--muted); margin-top:4px;}
+.stakta-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px;}
+
+.toggle-row{display:flex; align-items:center; gap:10px;}
+.switch{position:relative; width:36px; height:20px; flex-shrink:0;}
+.switch input{opacity:0; width:0; height:0;}
+.switch span{position:absolute; inset:0; background:var(--line-strong); border-radius:20px; transition:.15s;}
+.switch span::before{content:""; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s;}
+.switch input:checked + span{background:var(--sage);}
+.switch input:checked + span::before{transform:translateX(16px);}
+
+select.ui-select{
+  padding:7px 10px; border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--paper-raised);
+  font-size:12.5px; color:var(--ink);
+}
+
+/* ================= order rail ================= */
+.order-rail{padding:20px 20px 20px 0; display:flex; flex-direction:column; gap:14px; position:sticky; top:57px; height:fit-content;}
+.order-card{border:1px solid var(--line); background:var(--paper-raised); border-radius:var(--radius); padding:16px;}
+.order-card-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.valid-dot{width:8px; height:8px; border-radius:50%; background:var(--line-strong);}
+.valid-dot.valid{background:var(--sage);}
+.valid-dot.invalid{background:var(--red);}
+.breakdown{display:flex; flex-direction:column; gap:5px; margin-bottom:12px;}
+.price-line{display:flex; justify-content:space-between; font-size:12px;}
+.price-line span{color:var(--ink-soft);}
+.price-line strong{font-family:var(--font-data); font-weight:600;}
+.price-line.total{border-top:1px solid var(--line); padding-top:6px; margin-top:2px; font-size:13px;}
+.price-line.gross strong{color:var(--red-ink); font-size:15px;}
+
+/* Grupuota "Šis vienetas" suvestinė (2026-09-07) */
+.bd-group{margin-bottom:10px; padding-bottom:8px; border-bottom:1px dashed var(--line-strong);}
+.bd-title{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:4px;}
+.bd-first span{font-weight:600; color:var(--ink);}
+.bd-spec span{color:var(--muted); font-style:italic;}
+.bd-spec strong{color:var(--line-strong); font-weight:400;}
+.bd-subtotal{border-top:1px solid var(--line); margin-top:4px; padding-top:4px;}
+.bd-subtotal span{font-weight:600; font-size:11.5px; color:var(--ink-soft);}
+.bd-subtotal strong{font-weight:700;}
+.bd-grand{margin-top:4px;}
+.bd-grand .total span, .bd-grand .gross span{font-weight:700; font-size:11.5px; letter-spacing:.02em;}
+.qty-row{display:flex; justify-content:space-between; align-items:center; margin:12px 0;}
+.qty-row span{font-size:12px; color:var(--muted);}
+.qty-control{display:flex; align-items:center; border:1px solid var(--line-strong); border-radius:var(--radius);}
+.qty-control button{background:none; border:none; width:26px; height:28px; font-size:15px;}
+.qty-control input{width:36px; border:none; text-align:center; font-family:var(--font-data); font-size:13px; background:none;}
+
+.btn-primary{
+  width:100%; background:var(--terracotta); color:#fff; border:none; padding:11px; border-radius:var(--radius);
+  font-size:13px; font-weight:600; letter-spacing:.01em;
+}
+.btn-primary:hover{background:var(--terracotta-deep);}
+.btn-primary:disabled{background:var(--line-strong); color:var(--muted); cursor:not-allowed;}
+.btn-secondary{
+  width:100%; background:none; color:var(--ink); border:1px solid var(--line-strong); padding:10px; border-radius:var(--radius);
+  font-size:12.5px; font-weight:500;
+}
+.btn-secondary:hover{border-color:var(--terracotta);}
+.btn-ghost{background:none; border:none; color:var(--ink-soft); font-size:13px; padding:8px 0; text-decoration:underline;}
+
+/* Trūkstamų pasirinkimų užuomina ir po-įtraukimo veiksmai (2026-09-08) */
+.missing-hint{
+  background:var(--info-bg); color:var(--info-ink); font-size:11.5px; line-height:1.5;
+  padding:8px 10px; border-radius:var(--radius); margin-bottom:10px;
+}
+.post-add{display:flex; flex-direction:column; gap:8px;}
+.post-add-note{font-size:11.5px; color:var(--sage-ink); background:#e9f0e4; padding:8px 10px; border-radius:var(--radius); margin:0;}
+
+.cart-mini{display:flex; flex-direction:column; gap:8px; margin-bottom:10px; max-height:180px; overflow-y:auto;}
+.cart-mini-row{display:flex; justify-content:space-between; font-size:11.5px; gap:8px;}
+.cart-mini-row span:first-child{color:var(--ink-soft);}
+.cart-mini-row strong{font-family:var(--font-data); flex-shrink:0;}
+.cart-mini-empty{font-size:12px; color:var(--muted); font-style:italic;}
+.cart-total-row{display:flex; justify-content:space-between; font-size:13px; padding:10px 0; border-top:1px solid var(--line); margin-bottom:10px;}
+.cart-total-row strong{font-family:var(--font-data); color:var(--red-ink);}
+
+/* ================= cart view ================= */
+.cart-layout{display:grid; grid-template-columns:1fr 420px; gap:28px; padding:28px; max-width:1400px; margin:0 auto;}
+.cart-main h1{font-size:26px; margin-bottom:18px;}
+.cart-list{display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
+.cart-row{
+  display:grid; grid-template-columns:56px 1fr auto auto auto; gap:14px; align-items:center;
+  padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius); background:var(--paper-raised);
+}
+.cart-row img{width:44px; height:74px; object-fit:contain; background:var(--paper-sunk);}
+.cart-row .cr-title{font-weight:600; font-size:13.5px;}
+.cart-row .cr-sub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+.cart-row .cr-groups{margin-top:4px; display:flex; flex-direction:column; gap:5px;}
+.cr-grp{font-size:11.5px; color:var(--ink-soft); line-height:1.55;}
+.cr-grp-t{font-weight:700; color:var(--ink); text-transform:uppercase; font-size:10px; letter-spacing:.05em; margin-right:4px;}
+.cr-grp-sum{display:block; font-family:var(--font-data); font-size:11px; color:var(--terracotta-deep); font-weight:600; margin-top:1px;}
+.cart-row .cr-qty{font-family:var(--font-data); font-size:12.5px; text-align:center;}
+.cart-row .cr-price{font-family:var(--font-data); font-size:13px; text-align:right; font-weight:600;}
+.cart-row button{background:none; border:none; color:var(--muted); font-size:16px; padding:4px 8px;}
+.cart-row button:hover{color:var(--red);}
+.cart-empty{padding:40px; text-align:center; color:var(--muted); border:1px dashed var(--line-strong); border-radius:var(--radius);}
+
+.invoice-preview{position:sticky; top:20px; height:fit-content;}
+.invoice-sheet{
+  background:#fff; border:1px solid var(--line); box-shadow:0 4px 20px rgba(33,29,24,.08);
+  padding:34px; font-size:11.5px; color:#111; min-height:400px;
+}
+.inv-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:16px;}
+.inv-brand{font-family:var(--font-display); font-size:20px; font-weight:700;}
+.inv-brand small{display:block; font-family:var(--font-ui); font-size:9px; letter-spacing:.1em; color:var(--muted); font-weight:400; margin-top:2px;}
+/* max-width, kad ilgas "Pateikė" pavadinimas laužtųsi į kelias eilutes savo
+   stulpelyje, o ne tęstųsi viena eilute per visą lapą (2026-09-24). */
+.inv-meta{text-align:right; font-size:10.5px; color:#444; line-height:1.6; max-width:260px; overflow-wrap:break-word;}
+.inv-parties{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; font-size:10.5px;}
+.inv-parties h4{font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 4px;}
+.inv-table{width:100%; border-collapse:collapse; font-size:9.5px; margin-bottom:14px;}
+.inv-table th{text-align:left; border-bottom:1px solid #999; padding:5px 3px; font-size:8px; text-transform:uppercase; letter-spacing:.02em; color:#555; line-height:1.3;}
+.inv-table td{padding:6px 3px; border-bottom:1px solid #eee; vertical-align:top;}
+.inv-table td.num{text-align:right; font-family:var(--font-data);}
+.inv-totals{margin-left:auto; width:230px; display:flex; flex-direction:column; gap:4px;}
+.inv-totals .row{display:flex; justify-content:space-between; font-size:11px;}
+.inv-totals .row.grand{font-weight:700; font-size:13px; border-top:1px solid var(--ink); padding-top:6px; margin-top:2px;}
+.inv-words{margin-top:14px; font-size:10.5px; color:#333; border-top:1px solid #eee; padding-top:10px;}
+.inv-words em{font-style:normal; color:#777;}
+.inv-signrow{display:flex; gap:40px; margin-top:28px;}
+.inv-sign{flex:1; font-size:9.5px; color:#666;}
+.inv-signline{border-bottom:1px solid #999; height:30px; margin-top:4px;}
+.inv-footnote{margin-top:22px; font-size:9px; color:#777; line-height:1.6; border-top:1px solid #eee; padding-top:10px;}
+
+.send-tools{margin-top:16px; border:1px solid var(--line); background:var(--paper-raised); border-radius:var(--radius); padding:16px;}
+.text-field{display:block; margin-bottom:10px;}
+.text-field span{font-size:11px; color:var(--muted); display:block; margin-bottom:4px;}
+.text-field input{width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:var(--radius); font-size:12.5px;}
+.send-secondary{display:flex; gap:8px; margin:8px 0;}
+.fine-print{font-size:10.5px; color:var(--muted); line-height:1.6; margin-top:8px;}
+.btn-link{background:none; border:none; padding:0; font:inherit; font-size:10.5px; color:var(--ink-soft); text-decoration:underline; cursor:pointer;}
+.btn-link:hover{color:var(--terracotta-deep);}
+.copy-ok{margin-top:8px; font-size:12px; color:var(--sage-ink); font-weight:600;}
+
+.send-module{background:var(--terracotta-tint); border-top:1px solid var(--line-strong); padding:30px 28px 40px;}
+.send-module-inner{max-width:1400px; margin:0 auto;}
+.send-module .step-index{background:var(--terracotta); color:#fff; border:none; font-size:14px;}
+.send-module h2{font-family:var(--font-display); font-size:20px;}
+.send-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:26px; margin-top:16px;}
+.send-fields .text-field input{background:var(--paper-raised);}
+.send-actions{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 10px;}
+.send-actions .btn-primary{width:auto; flex:1 1 260px;}
+.send-actions .btn-secondary{width:auto; flex:0 1 auto; background:var(--paper-raised);}
+.btn-big{padding:13px 20px; font-size:13.5px;}
+.btn-ic{margin-right:6px;}
+.send-preview{display:flex; flex-direction:column;}
+.send-preview textarea{
+  flex:1; min-height:220px; margin-top:8px; padding:14px; border:1px solid var(--line-strong);
+  border-radius:var(--radius); font-family:var(--font-data); font-size:11.5px; line-height:1.6;
+  background:var(--paper-raised); color:var(--ink-soft); resize:vertical;
+}
+.send-preview textarea:focus{outline:2px solid var(--terracotta); outline-offset:1px;}
+
+/* ================= responsive ================= */
+@media (max-width:1200px){
+  .layout{grid-template-columns:210px 1fr 260px;}
+}
+@media (max-width:980px){
+  .layout{grid-template-columns:1fr; }
+  .family-rail{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line);}
+  .order-rail{position:static;}
+  .cart-layout{grid-template-columns:1fr;}
+  .invoice-preview{position:static;}
+  .client-panel{grid-template-columns:repeat(2,1fr);}
+  .send-grid{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .topbar{padding:10px 14px; gap:12px;}
+  .client-toggle{font-size:11px; padding:6px 10px;}
+  .stage{padding:14px;}
+  .hero{height:170px;}
+  .hero-copy h1{font-size:28px;}
+  .picked{flex-direction:column;}
+  .cart-row{grid-template-columns:44px 1fr; grid-template-areas:"img title" "img sub" "img actions";}
+}
+
+/* ================= print (invoice) ================= */
+@media print{
+  /* Paslepiame visą sąsają per display:none — kitaip lieka tuščių lapų nuo
+     elementų, kurie visibility:hidden vis tiek užima vietą (2026-09-11). */
+  #globalTopbar, #sellerPanel, #clientPanel, #configuratorView,
+  .cart-main, .send-module, .order-rail { display:none !important; }
+  .cart-layout { display:block !important; padding:0 !important; max-width:none !important; }
+  .invoice-preview { position:static !important; }
+  html, body { background:#fff !important; }
+  .invoice-sheet, .prod-sheet {
+    box-shadow:none !important; border:none !important; background:#fff !important;
+    margin:0 !important; padding:0 !important; width:100% !important; overflow:visible !important;
+  }
+  /* lentelė turi tilpti į lapą be nukirpimo */
+  .ptable { width:100% !important; max-width:100% !important; }
+  /* Spausdinant mastelis nereikalingas — lapas ir taip gulsčias */
+  .prod-scale { transform:none !important; width:100% !important; }
+  .prod-sheet { height:auto !important; }
+  /* Spausdinamas tik pasirinktas dokumentas */
+  body.print-invoice .prod-sheet { display:none !important; }
+  body.print-prod .invoice-sheet { display:none !important; }
+  /* Jei nepasirinkta (pvz. Ctrl+P) — spausdinama sąskaita */
+  body:not(.print-invoice):not(.print-prod):not(.print-both) .prod-sheet { display:none !important; }
+  /* „Sąskaita + gamybos lapas (1 PDF)" (2026-09-17): abu dokumentai lieka
+     matomi, o gamybos lapas prasideda naujame lape su kita orientacija —
+     @page pavadinimas nustatomas dinamiškai iš app.js printDoc('both'). */
+  body.print-both .prod-sheet { break-before: page; }
+}
+
+/* Versijos numeris kamputyje (2026-09-21) — padeda atskirti, kas su kuria
+   versija testuoja, kai vienu metu bandantys keli žmonės. Nerodoma
+   spausdinant/PDF, kad nepatektų į sąskaitą ar gamybos lapą. */
+.version-badge{
+  position:fixed; right:8px; bottom:6px; z-index:9999;
+  font-family:var(--font-data); font-size:10px; color:var(--muted);
+  background:var(--paper-raised); border:1px solid var(--line); border-radius:8px;
+  padding:2px 8px; opacity:.75; pointer-events:none; user-select:none;
+}
+@media print{ .version-badge{ display:none !important; } }
+
+:focus-visible{outline:2px solid var(--red); outline-offset:2px;}
+.bd-gross-inline{font-weight:500; font-size:10.5px; color:var(--muted);}
+.mail-note{background:var(--info-bg); color:var(--info-ink); padding:8px 10px; border-radius:var(--radius);}
+
+/* ===== Dekorų kolekcijos (2026-09-08) ===== */
+.decor-collection{margin-bottom:12px; padding:10px; border-radius:var(--radius); border:1px solid var(--line);}
+.decor-collection:last-child{margin-bottom:0;}
+.decor-col-head{
+  font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--ink-soft); margin-bottom:8px; display:flex; align-items:center; gap:6px;
+  width:100%; background:none; border:none; padding:0; cursor:pointer;
+  font-family:inherit; text-align:left;
+}
+/* Sutraukiamos kolekcijos (2026-09-11) */
+.dc-caret{font-size:9px; color:var(--muted); transition:transform .15s ease; display:inline-block;}
+.decor-collection.open .dc-caret{transform:rotate(90deg);}
+.decor-collection > .decor-grid{display:none;}
+.decor-collection.open > .decor-grid{display:grid;}
+.decor-collection.open .decor-col-head{margin-bottom:8px;}
+.decor-collection:not(.open) .decor-col-head{margin-bottom:0;}
+.decor-col-head span{
+  font-family:var(--font-data); font-weight:600; font-size:9.5px; letter-spacing:0;
+  background:rgba(0,0,0,.07); padding:1px 6px; border-radius:8px; color:var(--muted);
+}
+.decor-col-greko  { background:#faf4ea; border-color:#e8d9bd; }
+.decor-col-premium{ background:#f2f5f8; border-color:#cfdae4; }
+.decor-col-cpl    { background:#f3f1f5; border-color:#dbd4e0; }
+
+/* ===== Privalomi, dar nepasirinkti laukai =====
+   Anksčiau vien kairinis 3px brūkšnys — sunkiai pastebimas. Dabar visas
+   laukas apjuostas rėmeliu (užsakovo patikslinimas 2026-09-22: "juosta
+   irėminti visą meniu punktą, žmonėms taip geriau matyti"). */
+.attr-block.req-empty{
+  border:2px solid var(--terracotta); padding:8px 12px;
+  background:rgba(201,107,63,.06); border-radius:var(--radius);
+}
+.attr-block.req-empty > .attr-label > span:first-child{color:var(--terracotta-deep); font-weight:700;}
+
+/* ===== Užsakymo pozicijos veiksmų mygtukai ===== */
+.cr-actions{display:flex; flex-direction:column; gap:4px; align-items:stretch;}
+.cr-btn{
+  background:var(--paper-raised); border:1px solid var(--line-strong); color:var(--ink);
+  font-size:11px; padding:5px 9px; border-radius:var(--radius); white-space:nowrap; text-align:center;
+}
+.cr-btn:hover{border-color:var(--terracotta); color:var(--terracotta-deep);}
+.cr-btn-del:hover{border-color:var(--red); color:var(--red-ink);}
+
+/* hidden atributas turi nugalėti display:flex/grid klases */
+[hidden]{display:none !important;}
+
+/* ===== Užsakymo numerio patvirtinimo langas (2026-09-24) =====
+   Pirmas žingsnis atidarant įrankį — uždengia visą puslapį, kol nepatvirtintas. */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(43,35,24,.55);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000; padding:16px;
+}
+.modal-box{
+  background:var(--paper-raised); border:1px solid var(--line-strong); border-radius:var(--radius);
+  padding:24px; max-width:380px; width:100%; box-shadow:0 12px 32px rgba(43,35,24,.25);
+}
+.modal-box h2{margin:0 0 8px; font-family:var(--font-display); font-size:20px;}
+.modal-box p{margin:0 0 16px; color:var(--ink-soft); font-size:13px; line-height:1.5;}
+.modal-input{
+  width:100%; padding:10px 12px; border:1px solid var(--line-strong); border-radius:var(--radius);
+  font-family:var(--font-data); font-size:15px; margin-bottom:14px;
+}
+.modal-input.req-empty{border-color:var(--terracotta); background:rgba(201,107,63,.06);}
+
+
+/* ===== GAMYBOS LAPAS (antras dokumentas, 2026-09-11) ===== */
+/* Gamybos lapas yra A4 GULSČIAS su 11 stulpelių, o peržiūros stulpelis siauras.
+   Iki 2026-09-11 lentelė buvo grūdama į ~380 px ir stulpeliai užlipdavo vienas
+   ant kito. Dabar lapas piešiamas natūraliu pločiu ir sumažinamas masteliu —
+   peržiūra tampa tiksli miniatiūra, o spausdinant mastelis nenaudojamas. */
+.prod-sheet{
+  background:#fff; border:1px solid var(--line); box-shadow:0 4px 20px rgba(43,35,24,.08);
+  padding:20px; margin-top:16px; font-family:Arial,Helvetica,sans-serif; color:#111; font-size:8pt;
+  overflow:hidden;
+}
+.prod-scale{width:1040px; transform-origin:top left;}
+.pdh{display:flex; justify-content:space-between; align-items:flex-start;
+     border-bottom:2px solid #111; padding-bottom:5px; margin-bottom:7px;}
+.pbrand{font-size:15pt; font-weight:700; letter-spacing:.04em;}
+.pbrand small{display:block; font-size:6.4pt; font-weight:400; letter-spacing:.12em; color:#666;}
+.ptt{text-align:center;}
+.ptt h1{margin:0; font-size:12.5pt; letter-spacing:.05em;}
+.ptt p{margin:1px 0 0; font-size:7.2pt; color:#666;}
+.pmeta{font-size:7.6pt; line-height:1.5; text-align:right; max-width:200px; margin-left:auto; overflow-wrap:break-word;}
+.pmeta b{display:inline-block; min-width:58px; text-align:left; color:#555; font-weight:400;}
+
+.ptable{width:100%; border-collapse:collapse; table-layout:fixed;}
+.ptable th, .ptable td{border:.6px solid #999; padding:2px 3px; vertical-align:middle;}
+.ptable thead th{background:#e8e8e8; font-size:6.4pt; line-height:1.15; text-transform:uppercase;
+                 text-align:center; padding:3px 2px;}
+.ptable thead th .psub{display:block; font-weight:400; text-transform:none; color:#555; font-size:6pt;}
+.ptable thead{display:table-header-group;}
+.ptable tr{page-break-inside:avoid;}
+.pr1 td{border-bottom:.6px dotted #bbb;}
+.pr2 td{border-top:none; border-bottom:1.1px solid #666;}
+.zebra td{background:#fafafa;}
+.pc{text-align:center;} .pnr{font-weight:700; font-size:9pt;}
+.pfam{font-weight:700;} .pmuted{color:#999;}
+.pnoframe{background:#ffe9e9 !important; color:#a33; font-weight:700;}
+.palt{background:#fff3cd; padding:1px 3px; border-radius:2px; font-weight:700; font-size:7.4pt;}
+.pext{font-size:7pt; line-height:1.35; text-align:left;}
+.pex{margin-bottom:1px;}
+.pexl{display:inline-block; min-width:52px; color:#666; font-size:6.4pt;
+      text-transform:uppercase; letter-spacing:.02em;}
+.pflags{margin-top:2px;}
+.pflag{display:inline-block; background:#e7eef7; color:#2c4a6b; border:.5px solid #b9cde3;
+       border-radius:2px; padding:0 3px; margin:1px 2px 0 0; font-size:6.2pt; font-weight:700;}
+.pfoot{margin-top:8px; display:flex; justify-content:space-between; align-items:flex-end;
+       font-size:7pt; color:#555; border-top:.6px solid #ccc; padding-top:5px;}
+.psign{display:flex; gap:26px;} .psign div{min-width:150px;}
+.psign span{display:block; border-bottom:.6px solid #888; height:20px; margin-bottom:2px;}
+.plegend{font-size:6.4pt; color:#777; margin-top:3px;}

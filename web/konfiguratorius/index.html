@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ERKADO VIDAUS · užsakymų katalogas</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- Užsakymo numerio patvirtinimo langas — pirmas žingsnis, uždengia visą
+     puslapį, kol nepatvirtintas (užsakovo prašymas 2026-09-24). Laukas iš
+     anksto užpildytas automatiškai sugeneruotu numeriu (E + MMDDHHMI, pagal
+     Lietuvos laiko juostą) — operatorius gali jį priimti tokį, koks yra,
+     arba perrašyti savo. Patvirtinta reikšmė nukeliauja į #orderNumber. -->
+<div class="modal-overlay" id="orderNumberModal">
+  <div class="modal-box">
+    <h2>Užsakymo numeris</h2>
+    <p>Prieš pradedant, patvirtinkite arba įrašykite šio užsakymo numerį.</p>
+    <input id="orderNumberModalInput" class="modal-input" />
+    <button id="orderNumberModalConfirm" class="btn-primary" type="button">Patvirtinti</button>
+  </div>
+</div>
+
+<header class="topbar" id="globalTopbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <div class="brand-text"><strong>ERKADO</strong><em>vidaus</em></div>
+  </div>
+  <nav class="topbar-tabs">
+    <button class="tab active" data-view="configurator" type="button">Konfigūratorius</button>
+    <button class="tab" data-view="cart" type="button">Užsakymas <span id="tabCartCount" class="tab-count">0</span></button>
+  </nav>
+  <button class="client-toggle" id="printBoth" type="button" hidden>Spausdinti abu (1 PDF)</button>
+  <button class="client-toggle" id="printInvoice" type="button" hidden>Spausdinti tik sąskaitą</button>
+  <button class="client-toggle" id="printProd" type="button" hidden>Spausdinti tik gamybos lapą</button>
+  <button class="client-toggle" id="sellerToggle" type="button">Pardavėjo rekvizitai</button>
+  <button class="client-toggle" id="clientToggle" type="button">Kliento duomenys</button>
+</header>
+
+<section class="client-panel" id="sellerPanel" hidden>
+  <label><span>Pavadinimas</span><input id="sellerName" value="ERKADO" /></label>
+  <label><span>Įmonės kodas</span><input id="sellerCode" placeholder="Jūsų įmonės kodas" /></label>
+  <label><span>PVM mokėtojo kodas</span><input id="sellerVat" placeholder="LT..........." /></label>
+  <label><span>Adresas</span><input id="sellerAddress" placeholder="Įmonės adresas" /></label>
+  <label><span>Atsiskaitomoji sąskaita (IBAN)</span><input id="sellerIban" placeholder="LT.. .... .... .... ...." /></label>
+  <label><span>Bankas</span><input id="sellerBank" placeholder="pvz. AB SEB bankas" /></label>
+</section>
+
+<section class="client-panel" id="clientPanel" hidden>
+  <label><span>Užsakymo numeris</span><input id="orderNumber" placeholder="pvz. E09241024" /></label>
+  <label><span>Data</span><input id="orderDate" type="date" /></label>
+  <label><span>Mokėjimo terminas, d.d.</span><input id="paymentDays" type="number" min="0" value="7" /></label>
+  <label><span>Užsakovas</span><input id="customerName" placeholder="Įmonės arba kliento pavadinimas" /></label>
+  <label><span>Įmonės kodas</span><input id="customerCode" placeholder="pvz. 123456789" /></label>
+  <label><span>PVM mokėtojo kodas</span><input id="customerVat" placeholder="LT... (jei yra)" /></label>
+  <label><span>Adresas</span><input id="customerAddress" placeholder="Pristatymo / įmonės adresas" /></label>
+  <label><span>Telefonas</span><input id="customerPhone" placeholder="+370 ..." /></label>
+  <label><span>El. paštas</span><input id="customerEmail" type="email" placeholder="uzsakymai@imone.lt" /></label>
+</section>
+
+<div class="app" id="configuratorView">
+
+  <main class="layout">
+
+    <aside class="family-rail">
+      <div class="rail-heading">
+        <span class="eyebrow">ERKADO katalogas 2026</span>
+        <p id="railSummary"></p>
+      </div>
+      <div class="search-row"><input id="familySearch" placeholder="Ieškoti modelio pavadinimo..." /></div>
+      <div id="familyGroups"></div>
+      <div class="rail-pending">
+        <span class="eyebrow">Kita katalogo linija — dar ne šiame įrankyje</span>
+        <p id="pendingList"></p>
+      </div>
+    </aside>
+
+    <section class="stage">
+
+      <div class="hero" id="hero">
+        <div class="hero-media" id="heroMedia"></div>
+        <div class="hero-copy">
+          <span class="eyebrow" id="heroEyebrow">STILE RĖMINĖS DURYS</span>
+          <h1 id="heroTitle">WERBENA</h1>
+          <p id="heroPages"></p>
+        </div>
+      </div>
+
+      <div class="step" id="stepModels">
+        <div class="step-head"><span class="step-index">1</span><h2>Modelis</h2><span class="step-sub" id="modelCount"></span></div>
+        <div class="model-grid" id="modelGrid"></div>
+      </div>
+
+      <div class="picked" id="pickedPanel">
+        <img id="pickedImage" alt="" />
+        <div class="picked-copy">
+          <div class="picked-crumbs"><span id="crumbFamily"></span></div>
+          <h2 id="pickedTitle"></h2>
+          <p class="picked-note" id="pickedNote"></p>
+          <div class="picked-price" id="pickedPrice"></div>
+          <div class="picked-intarsia" id="pickedIntarsia" hidden></div>
+        </div>
+      </div>
+
+      <div id="messages"></div>
+
+      <div class="groups" id="groups"></div>
+
+    </section>
+
+    <aside class="order-rail">
+      <div class="order-card">
+        <div class="order-card-head"><span class="eyebrow">Šis vienetas</span><span class="valid-dot" id="validDot"></span></div>
+        <div id="thisUnitBreakdown" class="breakdown"></div>
+        <label class="qty-row"><span>Kiekis</span>
+          <div class="qty-control"><button id="qtyMinus" type="button">−</button><input id="qty" type="number" min="1" value="1" /><button id="qtyPlus" type="button">+</button></div>
+        </label>
+        <div id="missingHint" class="missing-hint" hidden></div>
+        <button id="addToOrder" class="btn-primary">Įtraukti į užsakymą</button>
+        <div id="postAddActions" class="post-add" hidden>
+          <p class="post-add-note">Komplektas įtrauktas į užsakymą. Ką darome toliau?</p>
+          <button id="startNew" class="btn-primary" type="button">Kurti naują</button>
+          <button id="copyEntry" class="btn-secondary" type="button">Kopijuoti įrašą</button>
+        </div>
+      </div>
+
+      <div class="order-card cart-preview">
+        <div class="order-card-head"><span class="eyebrow">Užsakymas</span><span id="cartCountSmall" class="tab-count">0</span></div>
+        <div id="cartMini" class="cart-mini"></div>
+        <div class="cart-total-row"><span>Iš viso su PVM</span><strong id="cartMiniTotal">0,00 €</strong></div>
+        <button id="goToCart" class="btn-secondary">Peržiūrėti užsakymą →</button>
+      </div>
+    </aside>
+
+  </main>
+</div>
+
+<div class="app" id="cartView" hidden>
+  <main class="cart-layout">
+    <section class="cart-main">
+      <h1>Užsakymo pozicijos</h1>
+      <div id="cartList" class="cart-list"></div>
+      <button class="btn-ghost" id="backToConfigurator" type="button">← Pridėti dar vienas duris</button>
+    </section>
+
+    <aside class="invoice-preview">
+      <div class="invoice-sheet" id="invoiceSheet"></div>
+      <div class="prod-sheet" id="prodSheet"><div class="prod-scale" id="prodScale"></div></div>
+    </aside>
+  </main>
+
+  <section class="send-module">
+    <div class="send-module-inner">
+      <div class="step-head"><span class="step-index">✉</span><h2>Siųsti užsakymą</h2><span class="step-sub">paskutinis žingsnis</span></div>
+
+      <div class="send-grid">
+        <div class="send-fields">
+          <label class="text-field"><span>Jūsų vardas / įmonė (nuo)</span><input id="senderName" placeholder="pvz. Jonas Jonaitis, UAB Statyba" /></label>
+          <label class="text-field"><span>Gavėjo el. paštas (kam)</span><input id="sendTo" type="email" placeholder="uzsakymai@erkado.lt" /></label>
+          <label class="text-field"><span>Laiško tema</span><input id="sendSubject" /></label>
+          <div class="send-actions">
+            <button id="openMail" class="btn-primary btn-big" type="button"><span class="btn-ic">✉</span>Atidaryti paruoštą laišką</button>
+            <button id="downloadEml" class="btn-secondary" type="button">⭳ Atsisiųsti .eml</button>
+            <button id="copyText" class="btn-secondary" type="button">⧉ Kopijuoti tekstą</button>
+            <button id="printBoth2" class="btn-secondary" type="button">🖶 Sąskaita + gamybos lapas (1 PDF)</button>
+          </div>
+          <p id="mailNote" class="fine-print mail-note" hidden></p>
+          <p class="fine-print"><strong>Vienas PDF failas:</strong> paspaudus „Atidaryti paruoštą laišką" (arba mygtuką „Sąskaita + gamybos lapas") spausdinimo lange išsaugokite VIENĄ PDF — jame bus ir <em>Sąskaita faktūra</em> (klientui), ir <em>Gamybos lapas</em> (operatorei, be kainų). Prisekite šį vieną failą prie atsidariusio laiško.<br>
+          Šis autonominis (be serverio) failas negali pats prisegti failų — tai naršyklės saugumo apribojimas, ne įrankio klaida.<br>
+          <strong>Kai kuriuose kompiuteriuose spausdinimo peržiūra šį du puslapius rodo netvarkingai</strong> (pvz. tuščias arba netaisyklingai išdėstytas lapas) — tai naršyklės peržiūros keistenybė, ne klaida. Pats išsaugotas PDF failas visada teisingas — jį verta patikrinti atidarant, o ne spręsti pagal peržiūros langą.</p>
+          <p class="fine-print">Jei prireiktų atskirų failų: <button id="printInvoice2" class="btn-link" type="button">tik sąskaita (PDF)</button> · <button id="printProd2" class="btn-link" type="button">tik gamybos lapas (PDF)</button></p>
+        </div>
+        <div class="send-preview">
+          <span class="eyebrow">Laiško tekstas (redaguojamas)</span>
+          <textarea id="messageBody" spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Versijos numeris kamputyje (2026-09-21, užsakovo prašymu) — daug
+     žmonių testuoja vienu metu, sunku suprasti, kas su kuria versija dirba.
+     KEISTI ČIA kaskart didinant versiją (žr. README_LT.md paskutinę versiją). -->
+<div id="versionBadge" class="version-badge">v53</div>
+
+<script src="data.js"></script>
+<script src="glass.js"></script>
+<script src="prodsheet.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
