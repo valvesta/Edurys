@@ -1,0 +1,92 @@
+# ==========================================================================
+# Automatinė patikra kiekvienam pakeitimui (push / pull request).
+#
+#  1. catalog  — ERKADO paketas sugeneruojamas iš naujo iš šaltinių ir turi
+#                sutapti baitas į baitą su repozitorijoje esančiu; patikra,
+#                kad kiekviena kaina atitinka originalų konfigūratorių.
+#  2. database — tikras SQL Server 2022 konteineryje: visos migracijos,
+#                pakartotinis paleidimas (nieko neturi daryti), katalogo
+#                importas su patikra ir pilnas scenarijaus testas
+#                (teisės, statusai, PVM, istorija, laiškų eilė).
+#  3. api      — API testai be duomenų bazės.
+#
+# Diegimas į Azure — atskiras workflow (deploy.yml), kai bus sukurti resursai.
+# ==========================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Paketas sugeneruojamas iš šaltinių identiškai
+        run: |
+          node db/tools/extract-erkado.js catalog-sources/erkado/2026-I /tmp/regenerated.json
+          cmp db/catalog/erkado-2026-I.bundle.json /tmp/regenerated.json
+      - name: Kiekviena kaina atitinka originalų konfigūratorių
+        run: node db/tools/verify-catalog.js db/catalog/erkado-2026-I.bundle.json catalog-sources/erkado/2026-I
+
+  database:
+    runs-on: ubuntu-latest
+    needs: catalog
+    env:
+      DB_SERVER: localhost
+      DB_NAME: durys_ci
+      DB_AUTH: sql
+      DB_USER: sa
+      DB_TRUST_CERT: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Laikinas slaptažodis (tik šiam konteineriui)
+        run: echo "DB_PASSWORD=Ci-$(openssl rand -hex 16)-Aa1!" >> "$GITHUB_ENV"
+      - name: SQL Server 2022 konteineris
+        run: |
+          docker run -d --name mssql -e ACCEPT_EULA=Y -e "MSSQL_SA_PASSWORD=$DB_PASSWORD" \
+            -e MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
+      - run: npm ci
+        working-directory: db
+      - name: Laukiama, kol SQL Server pasiruoš, ir sukuriama DB
+        working-directory: db
+        run: |
+          for i in $(seq 1 60); do
+            DB_NAME=master node -e "require('./tools/lib/connect').connect().then(p=>p.request().batch(\"IF DB_ID('durys_ci') IS NULL CREATE DATABASE durys_ci\").then(()=>p.close())).then(()=>process.exit(0),()=>process.exit(1))" && break
+            sleep 2
+          done
+      - name: Migracijos
+        working-directory: db
+        run: node tools/migrate.js
+      - name: Pakartotinis paleidimas nieko nekeičia
+        working-directory: db
+        run: node tools/migrate.js | tee /tmp/second.txt && ! grep -q '^  +' /tmp/second.txt
+      - name: ERKADO katalogo importas su patikra ir paskelbimas
+        working-directory: db
+        run: node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --publish --source ../catalog-sources/erkado/2026-I
+      - name: Pakartotinis to paties katalogo importas atmetamas
+        working-directory: db
+        run: "! node tools/import-catalog.js catalog/erkado-2026-I.bundle.json --source ../catalog-sources/erkado/2026-I"
+      - name: Scenarijaus testai
+        working-directory: db
+        run: npm test
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+        working-directory: api
+      - run: npm test
+        working-directory: api
