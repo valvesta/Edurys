@@ -268,7 +268,7 @@ test('11. pilnas kelias: serverio variklis (katalogas iš DB) -> api.Order_SaveL
 });
 
 test('12. administratorius sukuria įmonę tiesiogiai; atstovas — ne; kodas unikalus', async () => {
-  const code = '31' + parseInt(RUN, 16).toString().padStart(7, '0');
+  const code = '39' + parseInt(RUN, 16).toString().padStart(7, '0');
   await expectSqlError(exec('api.Company_Create', { ActorUserId: S.repId, Name: 'UAB X', CompanyCode: code }), 51001);
   await expectSqlError(exec('api.Company_Create', { ActorUserId: S.gaId, Name: '  ', CompanyCode: code }), 51004);
   await expectSqlError(exec('api.Company_Create', { ActorUserId: S.gaId, Name: 'UAB X', CompanyCode: code, Email: 'blogas' }), 51004);
