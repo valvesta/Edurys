@@ -41,13 +41,12 @@ app.use('/api', routes);
 // Naršyklės dalis (vaizdas) — statiniai failai iš ../web.
 // index.html niekada nekešuojamas, kad po atnaujinimo naudotojai iškart gautų naują versiją.
 const WEB_DIR = path.join(__dirname, '..', '..', 'web');
-const CONFIGURATOR_DIR = path.join(WEB_DIR, 'konfiguratorius') + path.sep;
 const noCache = res => res.setHeader('Cache-Control', 'no-cache');
 app.use(express.static(WEB_DIR, {
-  index: 'index.html', maxAge: '1h',
-  // HTML ir konfigūratoriaus failai visada tikrinami (ETag), kad po
-  // atnaujinimo naršyklė negautų senų ir naujų failų mišinio.
-  setHeaders: (res, file) => { if (file.endsWith('.html') || file.startsWith(CONFIGURATOR_DIR)) noCache(res); },
+  index: 'index.html',
+  // Visi vaizdo failai kaskart patikrinami (ETag; nepasikeitę nesiunčiami iš naujo),
+  // kad po atnaujinimo naršyklė iškart gautų naują versiją, o ne seną iš atminties.
+  setHeaders: res => noCache(res),
 }));
 
 /* Kainų variklis naršyklei — TIE PATYS failai, kurie skaičiuoja kainas
