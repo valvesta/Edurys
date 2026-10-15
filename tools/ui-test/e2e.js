@@ -220,6 +220,20 @@ async function admin(browser) {
     assert(st.state === 'saved', 'pasirinkus įmonę užsakymas išsaugotas');
     const db = (await state(port)).orders[0];
     assert(db.CompanyId === 1, 'užsakymas sukurtas pasirinktai įmonei');
+
+    // Kvietimas, kol paštas neprijungtas: nuoroda parodoma kvietėjui
+    await page.goto(base + '/naudotojai');
+    await page.click('[data-role=invite-user]');
+    await page.fill('input[name=email]', 'petras@klientas.lt');
+    await page.selectOption('select[name=role]', 'USER');
+    await page.selectOption('select[name=companyId]', '1');
+    await page.click('.modal button[type=submit]');
+    await page.waitForSelector('[data-role=invite-link]');
+    const link = await page.inputValue('[data-role=invite-link]');
+    assert(new RegExp('^' + base + '/kvietimas#[A-Za-z0-9_-]{40,}$').test(link), 'kvietimo nuoroda parodyta (paštas neprijungtas)');
+    const inv = (await state(port)).log.find(x => x.name === 'api.Invitation_Create');
+    const crypto = require('crypto');
+    assert(Buffer.from(inv.p.TokenHash.data).equals(crypto.createHash('sha256').update(link.split('#')[1]).digest()), 'į DB keliauja tik nuorodos žetono SHA-256');
     if (page.errors.length) throw new Error('Naršyklės klaidos:\n' + page.errors.join('\n'));
   } finally { srv.kill(); }
 }

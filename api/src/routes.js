@@ -51,6 +51,10 @@ function newInvitation() {
     expiresAt: new Date(Date.now() + config.invitationDays * 86400000),
   };
 }
+/* Kol paštas neprijungtas (MAIL_SENDER nenustatytas), kvietimo nuoroda grąžinama
+   TIK ją sukūrusiam asmeniui, kad galėtų perduoti pats. Prijungus paštą — nebegrąžinama. */
+const withLink = (row, inv) => (config.mail.senderMailbox ? row : { ...row, inviteUrl: inv.url });
+
 const inviteParams = inv => ({
   TokenHash: [sql.Binary(32), inv.hash],
   ExpiresAt: [sql.DateTime2(3), inv.expiresAt],
@@ -120,7 +124,7 @@ router.post('/admin/access-requests/:id/approve', requireUser, requireLevel(ADMI
     ReviewNote: [sql.NVarChar(1000), str((req.body || {}).note, 1000)],
     ...inviteParams(inv),
   });
-  res.json(r.recordset[0]);
+  res.json(withLink(r.recordset[0], inv));
 }));
 
 router.post('/admin/access-requests/:id/reject', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
@@ -152,7 +156,7 @@ router.post('/users/invite', requireUser, requireLevel(REP), wrap(async (req, re
     CompanyId: [sql.Int, int(b.companyId)],
     ...inviteParams(inv),
   });
-  res.status(201).json(r.recordset[0]);
+  res.status(201).json(withLink(r.recordset[0], inv));
 }));
 
 router.post('/users/:id/resend-invitation', requireUser, requireLevel(REP), wrap(async (req, res) => {
@@ -162,7 +166,7 @@ router.post('/users/:id/resend-invitation', requireUser, requireLevel(REP), wrap
     UserId: [sql.Int, int(req.params.id, true)],
     ...inviteParams(inv),
   });
-  res.json(r.recordset[0]);
+  res.json(withLink(r.recordset[0], inv));
 }));
 
 router.post('/users/:id/status', requireUser, requireLevel(REP), wrap(async (req, res) => {

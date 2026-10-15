@@ -119,3 +119,25 @@ export function actionButton(label, fn, cls = 'btn') {
 }
 
 export const pageHeader = (title, ...actions) => h('div', { class: 'page-head' }, h('h1', {}, title), h('div', { class: 'page-actions' }, actions));
+
+/* Kol paštas neprijungtas: parodoma kvietimo nuoroda, kurią galima nukopijuoti ir perduoti pačiam. */
+export function showInviteLink(url) {
+  if (!url) return Promise.resolve();
+  return new Promise(resolve => {
+    const input = h('input', { type: 'text', readonly: true, value: url, 'data-role': 'invite-link' });
+    const copy = h('button', { type: 'button', class: 'btn' }, 'Kopijuoti');
+    copy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); copy.textContent = 'Nukopijuota ✓'; }
+      catch (e) { input.select(); }
+    });
+    const box = h('div', { class: 'modal' },
+      h('h2', {}, 'Kvietimo nuoroda'),
+      h('p', { class: 'muted' }, 'Sistemos paštas dar neprijungtas, todėl laiškas neišsiųstas. Nukopijuokite nuorodą ir perduokite ją pakviestam žmogui (el. paštu, žinute). Nuoroda veikia tik su tuo el. paštu, kuriuo pakviesta.'),
+      h('div', { class: 'field-row' }, input, copy),
+      h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: () => close() }, 'Uždaryti')));
+    const overlay = h('div', { class: 'overlay' }, box);
+    function close() { overlay.remove(); resolve(); }
+    document.body.append(overlay);
+    input.select();
+  });
+}

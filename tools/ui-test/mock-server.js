@@ -56,6 +56,11 @@ const P = {
   'api.Catalog_ListPublished': () => [[{ ManufacturerId: 1, ManufacturerCode: 'ERKADO', ManufacturerName: 'ERKADO', CatalogVersionId: 1, VersionCode: '2026-I', VersionName: 'ERKADO vidaus durys, katalogas I/2026/B', CurrencyCode: 'EUR', VatRate: 0.21, PublishedAt: now() }]],
   'api.Catalog_GetVersion': p => { if (p.CatalogVersionId !== 1) throw dbErr(51002, 'Katalogas nerastas.'); return [[{ BundleJson: BUNDLE }]]; },
   'api.Company_List': () => [companies],
+  'api.User_List': () => [[]],
+  'api.Invitation_Create': p => {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(p.Email)) throw dbErr(51004, 'Neteisingas el. pašto adresas.');
+    return [[{ UserId: 50, InvitationId: 1 }]];
+  },
   'api.Company_Create': p => {
     if (LEVEL < 30) throw dbErr(51001, 'Neturite teisės.');
     if (companies.some(c => c.CompanyCode === p.CompanyCode.trim())) throw dbErr(51006, 'Įmonė su tokiu kodu jau yra.');

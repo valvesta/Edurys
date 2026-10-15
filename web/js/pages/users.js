@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { h, table, badge, fmtDate, pageHeader, loading, errorBox, formModal, confirmModal, toast } from '../ui.js';
+import { h, table, badge, fmtDate, pageHeader, loading, errorBox, formModal, confirmModal, toast, showInviteLink } from '../ui.js';
 
 const STATUS_NAME = { ACTIVE: 'Aktyvus', INVITED: 'Pakviestas', DISABLED: 'Išjungtas' };
 const ROLES = [
@@ -58,15 +58,18 @@ async function invite(ctx, presetCompanyId) {
   });
   if (!v) return;
   try {
-    await api.post('/users/invite', { email: v.email, displayName: v.displayName || null, role: v.role,
+    const r = await api.post('/users/invite', { email: v.email, displayName: v.displayName || null, role: v.role,
       companyId: v.companyId ? Number(v.companyId) : null });
-    toast('Kvietimas išsiųstas.');
+    if (r.inviteUrl) await showInviteLink(r.inviteUrl); else toast('Kvietimas išsiųstas.');
     ctx.reload();
   } catch (e) { toast(e.message, 'bad'); }
 }
 
 async function resend(r) {
-  try { await api.post(`/users/${r.UserId}/resend-invitation`); toast('Naujas kvietimas išsiųstas.'); }
+  try {
+    const x = await api.post(`/users/${r.UserId}/resend-invitation`);
+    if (x.inviteUrl) await showInviteLink(x.inviteUrl); else toast('Naujas kvietimas išsiųstas.');
+  }
   catch (e) { toast(e.message, 'bad'); }
 }
 

@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { h, table, badge, fmtDate, pageHeader, loading, errorBox, formModal, toast } from '../ui.js';
+import { h, table, badge, fmtDate, pageHeader, loading, errorBox, formModal, toast, showInviteLink } from '../ui.js';
 
 const FILTERS = [['PENDING', 'Laukia'], ['APPROVED', 'Patvirtintos'], ['REJECTED', 'Atmestos'], ['', 'Visos']];
 const STATUS_NAME = { PENDING: 'Laukia', APPROVED: 'Patvirtinta', REJECTED: 'Atmesta' };
@@ -38,8 +38,8 @@ async function approve(r, ctx) {
   });
   if (!v) return;
   try {
-    await api.post(`/admin/access-requests/${r.AccessRequestId}/approve`, { note: v.note || null });
-    toast('Įmonė sukurta, kvietimas išsiųstas.');
+    const x = await api.post(`/admin/access-requests/${r.AccessRequestId}/approve`, { note: v.note || null });
+    if (x.inviteUrl) await showInviteLink(x.inviteUrl); else toast('Įmonė sukurta, kvietimas išsiųstas.');
     ctx.reload();
   } catch (e) { toast(e.message, 'bad'); }
 }
