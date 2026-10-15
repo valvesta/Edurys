@@ -2,7 +2,7 @@
 /* Registrų pagalba: atsakymų apdorojimas pagal TIKRUS 2026-10-15 atsakymus. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { lookupCompany, checkVat } = require('../src/registry');
+const { lookupCompany, checkVat, vatCandidate, suggestVat } = require('../src/registry');
 
 const respond = (body, status = 200) => async () => ({ ok: status < 400, status, json: async () => body });
 const JAR_MAXIMA = { _data: [{ _type: 'datasets/gov/rc/jar/iregistruoti/JuridinisAsmuo', ja_kodas: 123033512, ja_pavadinimas: 'MAXIMA LT, UAB',
@@ -34,4 +34,18 @@ test('VIES: galiojantis kodas, „N/A“ adresas nerodomas', async () => {
   assert.equal(bad.name, null);
   await assert.rejects(checkVat('100001918', respond({ isValid: false, userError: 'MS_UNAVAILABLE' })), /nepasiekiamas/);
   assert.throws(() => checkVat('LT12', respond({})), /9 arba 12/);
+});
+
+test('PVM kodo spėjimas iš įmonės kodo (tikras pavyzdys MAXIMA LT)', () => {
+  assert.equal(vatCandidate('123033512'), '230335113');
+  assert.equal(vatCandidate('12345'), null);
+  for (const c of ['110000291', '147629339', '304051696', '999999999']) assert.match(vatCandidate(c), /^\d{9}$/);
+});
+
+test('PVM pasiūlomas tik kai VIES patvirtina ir pavadinimas sutampa', async () => {
+  const vies = (name, valid = true) => respond({ isValid: valid, userError: valid ? 'VALID' : 'INVALID', name, address: 'N/A' });
+  assert.equal(await suggestVat('123033512', 'MAXIMA LT, UAB', vies('MAXIMA LT, UAB')), 'LT230335113');
+  assert.equal(await suggestVat('110000291', 'UAB A', vies('UAB B')), null, 'kitas pavadinimas');
+  assert.equal(await suggestVat('110000292', 'UAB A', vies('UAB A', false)), null, 'negalioja');
+  assert.equal(await suggestVat('110000293', 'UAB A', async () => { throw new Error('x'); }), null, 'VIES nepasiekiamas');
 });

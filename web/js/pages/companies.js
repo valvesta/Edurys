@@ -74,9 +74,11 @@ async function lookupCompany(inputs, note) {
   inputs.companyCode.value = code;
   if (r.name) inputs.name.value = r.name;
   if (r.address && !inputs.address.value) inputs.address.value = r.address;
+  if (r.vatCode) inputs.vatCode.value = r.vatCode;
   note(r.deregisteredOn
     ? `Dėmesio: įmonė išregistruota ${r.deregisteredOn}. Pavadinimas užpildytas.`
-    : `Rasta: ${r.name}${r.registeredOn ? ' (įregistruota ' + r.registeredOn + ')' : ''}. Adresą ir PVM kodą įveskite rankomis.`,
+    : `Rasta: ${r.name}${r.registeredOn ? ' (įregistruota ' + r.registeredOn + ')' : ''}.` +
+      (r.vatCode ? ` PVM kodas ${r.vatCode} patikrintas VIES. Adresą įveskite rankomis.` : ' PVM kodo registras nepateikė — įveskite rankomis ir spauskite „Tikrinti PVM“. Adresą įveskite rankomis.'),
   r.deregisteredOn ? 'warn' : 'ok');
 }
 

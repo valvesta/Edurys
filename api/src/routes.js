@@ -187,7 +187,8 @@ const registryLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHead
 router.get('/admin/registry/company/:code', registryLimiter, requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
   const found = await registry.lookupCompany(String(req.params.code).trim());
   if (!found) return res.status(404).json({ error: 'Įmonė su tokiu kodu registre nerasta.' });
-  res.json(found);
+  const vatCode = found.deregisteredOn ? null : await registry.suggestVat(found.companyCode, found.name);
+  res.json({ ...found, vatCode });
 }));
 router.get('/admin/registry/vat/:vat', registryLimiter, requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
   res.json(await registry.checkVat(String(req.params.vat)));

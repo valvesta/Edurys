@@ -79,4 +79,30 @@ function checkVat(input, fetchImpl = fetch) {
   });
 }
 
-module.exports = { lookupCompany, checkVat };
+/* Senesnių juridinių asmenų 9 skaitmenų PVM kodas sudaromas iš įmonės kodo:
+   įmonės kodo 2–8 skaitmenys, tada „1“ (juridinis asmuo) ir kontrolinis skaitmuo
+   (svoriai 1–8, mod 11; jei 10 — svoriai 3–10, mod 11; jei vėl 10 — 0).
+   Pvz. 123033512 -> 230335113. Tai tik SPĖJIMAS — naudojamas tik VIES patvirtinus. */
+function vatCandidate(code) {
+  if (!/^\d{9}$/.test(code)) return null;
+  const d = (code.slice(1, 8) + '1').split('').map(Number);
+  let c = d.reduce((s, x, i) => s + x * (i + 1), 0) % 11;
+  if (c === 10) c = d.reduce((s, x, i) => s + x * (((i + 2) % 9) + 1), 0) % 11;
+  if (c === 10) c = 0;
+  return d.join('') + c;
+}
+
+const normName = s => String(s || '').toLowerCase().replace(/[^a-ząčęėįšųūž0-9]/g, '');
+
+/* PVM kodo pasiūlymas: tik jei VIES patvirtina, kad kodas galioja IR išduotas
+   tos pačios įmonės pavadinimu. Kitu atveju — null (įvedama rankomis). */
+async function suggestVat(code, companyName, fetchImpl = fetch) {
+  const cand = vatCandidate(code);
+  if (!cand || !companyName) return null;
+  try {
+    const v = await checkVat(cand, fetchImpl);
+    return v.valid && v.name && normName(v.name) === normName(companyName) ? v.vatCode : null;
+  } catch (e) { return null; }       // VIES nepasiekiamas — tiesiog nepasiūlome
+}
+
+module.exports = { lookupCompany, checkVat, vatCandidate, suggestVat };
