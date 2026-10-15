@@ -504,3 +504,9 @@ function tplOrderStatus(orderNumber, label, message, canRetry) {
 function tplBreakdownPending(what) {
   return `<div class="bd-pending">Kaina bus apskaičiuota, kai pasirinksite ${esc(what)}.</div>`;
 }
+
+/* ---- Išsaugojimo klaida prie „Įtraukti į užsakymą“ ---- */
+function tplSaveError(message, canRetry) {
+  return `<strong>Užsakymas neišsaugotas.</strong> ${esc(message)}
+    ${canRetry ? '<button type="button" class="btn-secondary" data-retry>Bandyti dar kartą</button>' : ''}`;
+}

@@ -648,3 +648,5 @@ select.modal-input{font-family:var(--font-ui); font-size:14px; background:#fff;}
    persikelti į antrą eilutę, o ne laužyti mygtukų tekstą. */
 .topbar{flex-wrap:wrap; row-gap:8px; gap:16px;}
 .topbar .client-toggle{white-space:nowrap; margin-left:0;}
+.save-error{background:var(--danger-bg); color:var(--danger-ink); font-size:12px; line-height:1.5; padding:10px 12px; border-radius:var(--radius); margin-bottom:10px;}
+.save-error .btn-secondary{margin-top:8px; background:var(--paper-raised);}

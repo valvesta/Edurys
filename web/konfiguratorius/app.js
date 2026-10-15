@@ -987,6 +987,13 @@ function renderOrderStatus() {
   el.innerHTML = tplOrderStatus(nr, label, cur.message, orderUi.lines === 'error');
   const retry = el.querySelector('[data-retry]');
   if (retry) retry.onclick = syncCart;
+  // Klaida rodoma ir prie mygtuko „Įtraukti į užsakymą“ — kad nepraslystų pro akis
+  const box = $('#saveError');
+  const bad = cur.state === 'error' || cur.state === 'mismatch';
+  box.hidden = !bad;
+  box.innerHTML = bad ? tplSaveError(cur.message, orderUi.lines === 'error') : '';
+  const retry2 = box.querySelector('[data-retry]');
+  if (retry2) retry2.onclick = syncCart;
   const can = canSubmit();
   $('#submitOrder').disabled = !can.ok;
   $('#submitHint').textContent = can.ok ? '' : can.why;

@@ -266,3 +266,20 @@ test('11. pilnas kelias: serverio variklis (katalogas iš DB) -> api.Order_SaveL
   assert.equal(Math.round(Number(s.recordset[0].VatTotal) * 100), vat);
   assert.ok(net > 0);
 });
+
+test('12. administratorius sukuria įmonę tiesiogiai; atstovas — ne; kodas unikalus', async () => {
+  const code = '31' + parseInt(RUN, 16).toString().padStart(7, '0');
+  await expectSqlError(exec('api.Company_Create', { ActorUserId: S.repId, Name: 'UAB X', CompanyCode: code }), 51001);
+  await expectSqlError(exec('api.Company_Create', { ActorUserId: S.gaId, Name: '  ', CompanyCode: code }), 51004);
+  await expectSqlError(exec('api.Company_Create', { ActorUserId: S.gaId, Name: 'UAB X', CompanyCode: code, Email: 'blogas' }), 51004);
+  const r = await exec('api.Company_Create', { ActorUserId: S.gaId, Name: ' UAB Tiesioginė ' + RUN + ' ', CompanyCode: ' ' + code + ' ', VatCode: 'lt 100', Email: 'Info@Tiesiogine.LT' });
+  const id = r.recordset[0].CompanyId;
+  const c = await pool.request().input('id', sql.Int, id).query('SELECT Name, CompanyCode, VatCode, Email, Status, CreatedByUserId FROM org.Company WHERE CompanyId=@id');
+  assert.deepEqual(c.recordset[0], { Name: 'UAB Tiesioginė ' + RUN, CompanyCode: code, VatCode: 'LT100', Email: 'info@tiesiogine.lt', Status: 'ACTIVE', CreatedByUserId: S.gaId });
+  await expectSqlError(exec('api.Company_Create', { ActorUserId: S.gaId, Name: 'Kita', CompanyCode: code }), 51006);
+  const a = await pool.request().input('id', sql.NVarChar(50), String(id)).query("SELECT COUNT(*) AS n FROM audit.AuditLog WHERE Action='COMPANY_CREATED' AND EntityId=@id");
+  assert.equal(a.recordset[0].n, 1);
+  // administratorius gali kurti užsakymą šiai įmonei
+  const o = await exec('api.Order_CreateDraft', { ActorUserId: S.gaId, CatalogVersionId: S.versionId, CompanyId: id });
+  assert.ok(o.recordset[0].OrderId > 0);
+});

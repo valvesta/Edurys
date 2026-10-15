@@ -37,7 +37,9 @@ function toCents(txt) {
 }
 const fromCents = c => Number(c) / 100;
 
-const companies = [
+const companies = process.env.NO_ACTIVE_COMPANIES ? [
+  { CompanyId: 2, Name: 'UAB Uždaryta', CompanyCode: '300000000', Status: 'SUSPENDED' },
+] : [
   { CompanyId: 1, Name: 'UAB Statybų meistrai', CompanyCode: '304111222', Status: 'ACTIVE' },
   { CompanyId: 2, Name: 'UAB Uždaryta', CompanyCode: '300000000', Status: 'SUSPENDED' },
 ];
@@ -50,6 +52,13 @@ const P = {
   'api.Catalog_ListPublished': () => [[{ ManufacturerId: 1, ManufacturerCode: 'ERKADO', ManufacturerName: 'ERKADO', CatalogVersionId: 1, VersionCode: '2026-I', VersionName: 'ERKADO vidaus durys, katalogas I/2026/B', CurrencyCode: 'EUR', VatRate: 0.21, PublishedAt: now() }]],
   'api.Catalog_GetVersion': p => { if (p.CatalogVersionId !== 1) throw dbErr(51002, 'Katalogas nerastas.'); return [[{ BundleJson: BUNDLE }]]; },
   'api.Company_List': () => [companies],
+  'api.Company_Create': p => {
+    if (LEVEL < 30) throw dbErr(51001, 'Neturite teisės.');
+    if (companies.some(c => c.CompanyCode === p.CompanyCode.trim())) throw dbErr(51006, 'Įmonė su tokiu kodu jau yra.');
+    const c = { CompanyId: companies.length + 10, Name: p.Name.trim(), CompanyCode: p.CompanyCode.trim(), Status: 'ACTIVE', Revision: 1, ActiveUsers: 0, OrderCount: 0, CreatedAt: now() };
+    companies.push(c);
+    return [[{ CompanyId: c.CompanyId }]];
+  },
   'api.Order_CreateDraft': p => {
     let companyId = p.CompanyId;
     if (LEVEL >= 30) { if (companyId == null) throw dbErr(51004, 'Nurodykite, kuriai įmonei kuriamas užsakymas.'); } else companyId = 1;

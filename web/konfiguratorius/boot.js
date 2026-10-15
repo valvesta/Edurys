@@ -73,10 +73,10 @@ function createMedia(makerFolder) {
 }
 
 /* ---------- įmonės pasirinkimas (administratoriui) ---------- */
-let companiesCache = null;
 async function chooseCompany() {
-  if (!companiesCache) companiesCache = (await api.get('/admin/companies')).filter(c => c.Status === 'ACTIVE');
-  if (!companiesCache.length) throw new Error('Nėra aktyvių įmonių — užsakymo išsaugoti negalima.');
+  // Kaskart iš naujo — įmonė galėjo būti ką tik sukurta kitame lange
+  const companiesCache = (await api.get('/admin/companies')).filter(c => c.Status === 'ACTIVE');
+  if (!companiesCache.length) throw new Error('Nėra nė vienos aktyvios įmonės, todėl užsakymo išsaugoti negalima. Sukurkite įmonę skiltyje „Įmonės“ (mygtukas „+ Nauja įmonė“) ir bandykite dar kartą.');
   const sel = $('#companySelect');
   sel.replaceChildren(...companiesCache.map(c => {
     const o = document.createElement('option');

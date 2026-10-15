@@ -35,13 +35,13 @@ function png(w, h) {   // mažas teisingas PNG
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-function startServer(role, port) {
+function startServer(role, port, extraEnv = {}) {
   const media = fs.mkdtempSync(path.join(os.tmpdir(), 'media-'));
   fs.mkdirSync(path.join(media, 'erkado'));
   fs.writeFileSync(path.join(media, 'erkado', 'werbena-hero.jpg'), png(40, 20));   // turinys PNG — naršyklei nesvarbu
   fs.writeFileSync(path.join(media, 'erkado', 'werbena-1.png'), png(20, 40));
   const p = spawn(process.execPath, [path.join(__dirname, 'mock-server.js')], {
-    env: { ...process.env, PORT: String(port), ROLE: role, MEDIA_DEV_DIR: media, NODE_ENV: 'development' }, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, PORT: String(port), ROLE: role, MEDIA_DEV_DIR: media, NODE_ENV: 'development', ...extraEnv }, stdio: ['ignore', 'pipe', 'pipe'],
   });
   let out = '';
   p.stdout.on('data', d => { out += d; }); p.stderr.on('data', d => { out += d; process.stderr.write(d); });
@@ -203,11 +203,49 @@ async function admin(browser) {
   } finally { srv.kill(); }
 }
 
+async function adminNoCompanies(browser) {
+  console.log('Administratorius, kai nėra aktyvių įmonių:');
+  const port = 18097, base = `http://localhost:${port}`;
+  const srv = await startServer('GLOBAL_ADMIN', port, { NO_ACTIVE_COMPANIES: '1' });
+  try {
+    const page = await newPage(browser, base);
+    await page.goto(base + '/konfiguratorius/');
+    await page.waitForFunction(() => document.querySelector('#bootOverlay').hidden);
+    await configureAndAdd(page, 'WERBENA', 0, 1);
+    const st = await waitSaved(page);
+    assert(st.state === 'error', 'būsena „Neišsaugota“');
+    const msg = await page.evaluate(() => { const b = document.querySelector('#saveError'); return b.hidden ? '' : b.textContent; });
+    assert(msg.includes('Nėra nė vienos aktyvios įmonės') && msg.includes('+ Nauja įmonė'), 'aiški klaida prie mygtuko „Įtraukti“');
+    assert((await state(port)).orders.length === 0, 'užsakymas nesukurtas');
+
+    // Įmonė sukuriama administravime, tada „Bandyti dar kartą“
+    const admin = await page.context().newPage();
+    await admin.goto(base + '/');
+    await admin.evaluate(() => sessionStorage.setItem('fake', '1'));
+    await admin.goto(base + '/imones');
+    await admin.click('[data-role=new-company]');
+    await admin.fill('input[name=name]', 'UAB Nauja');
+    await admin.fill('input[name=companyCode]', '305555555');
+    await admin.click('.modal button[type=submit]');
+    await admin.waitForFunction(() => document.body.textContent.includes('Įmonė sukurta'));
+    assert(true, 'įmonė sukurta per „+ Nauja įmonė“');
+    await page.bringToFront();
+    await page.click('#saveError [data-retry]');
+    await page.waitForSelector('#companyModal:not([hidden])');
+    await page.click('#companyConfirm');
+    const st2 = await waitSaved(page);
+    const db = (await state(port)).orders[0];
+    assert(st2.state === 'saved' && db && db.CompanyName === 'UAB Nauja', 'užsakymas išsaugotas naujai įmonei');
+    if (page.errors.length) throw new Error('Naršyklės klaidos:\n' + page.errors.join('\n'));
+  } finally { srv.kill(); }
+}
+
 (async () => {
   const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
   try {
     await companyRep(browser);
     await admin(browser);
+    await adminNoCompanies(browser);
     console.log('OK: konfigūratoriaus e2e testas praėjo.');
   } finally { await browser.close(); }
 })().catch(e => { console.error(e.message || e); process.exit(1); });

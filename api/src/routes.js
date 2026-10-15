@@ -181,6 +181,21 @@ router.get('/admin/companies', requireUser, requireLevel(ADMIN), wrap(async (req
   res.json(r.recordset);
 }));
 
+/* Įmonės sukūrimas tiesiogiai (administratorius). */
+router.post('/admin/companies', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  const b = req.body || {};
+  const r = await callProcedure('api.Company_Create', {
+    ActorUserId: [sql.Int, req.user.UserId],
+    Name: [sql.NVarChar(200), str(b.name, 200, true)],
+    CompanyCode: [sql.NVarChar(50), str(b.companyCode, 50, true)],
+    VatCode: [sql.NVarChar(50), str(b.vatCode, 50)],
+    Address: [sql.NVarChar(400), str(b.address, 400)],
+    Phone: [sql.NVarChar(50), str(b.phone, 50)],
+    Email: [sql.NVarChar(320), str(b.email, 320)],
+  });
+  res.status(201).json({ companyId: r.recordset[0].CompanyId });
+}));
+
 router.post('/admin/companies/:id/status', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
   const b = req.body || {};
   await callProcedure('api.Company_SetStatus', {
