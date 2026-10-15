@@ -20,7 +20,7 @@ process.env.APP_BASE_URL = `http://localhost:${PORT}`;
 process.env.DB_SERVER = 'imitacija'; process.env.DB_NAME = 'imitacija';
 process.env.WEB_CLIENT_ID = '00000000-0000-0000-0000-000000000001';
 process.env.AUTH_PROVIDERS = JSON.stringify([
-  { name: 'staff', issuer: 'https://login.microsoftonline.com/00000000-0000-0000-0000-000000000000/v2.0', jwksUri: 'https://login.microsoftonline.com/x/keys', audience: '00000000-0000-0000-0000-000000000002' },
+  { name: 'staff', issuer: 'https://login.microsoftonline.com/93fb58f1-13db-4382-b5fa-2bb86e1406f1/v2.0', jwksUri: 'https://login.microsoftonline.com/x/keys', audience: '00000000-0000-0000-0000-000000000002' },
   { name: 'clients', issuer: 'https://00000000-0000-0000-0000-000000000003.ciamlogin.com/00000000-0000-0000-0000-000000000003/v2.0', jwksUri: 'https://00000000-0000-0000-0000-000000000003.ciamlogin.com/x/keys',
     audience: '00000000-0000-0000-0000-000000000004', clientId: '00000000-0000-0000-0000-000000000004', authority: 'https://testasklientai.ciamlogin.com/' },
 ]);

@@ -182,7 +182,7 @@ async function start() {
     bootMessage('Norėdami naudotis konfigūratoriumi, prisijunkite.');
     const list = authProviders().slice().sort((a, b) => (a.kind === 'clients' ? -1 : 0) - (b.kind === 'clients' ? -1 : 0));
     bootActions(list.map((p, i) => ({ label: list.length === 1 ? 'Prisijungti su Microsoft' : p.label, primary: i === 0,
-      onClick: () => login(location.pathname + location.search, p.name) })));
+      onClick: () => login(location.pathname + location.search, p.name).catch(e => fail('Prisijungti nepavyko: ' + (e.errorCode || e.message))) })));
     return;
   }
 

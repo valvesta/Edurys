@@ -44,7 +44,7 @@ function makeClient(p) {
     auth: {
       clientId: p.clientId,
       authority: p.authority,
-      knownAuthorities: p.kind === 'clients' ? [new URL(p.authority).host] : undefined,
+      // Svarbu: neperduoti nenustatytų (undefined) laukų — MSAL tada nebeiškart randa adresų
       ...ciamAuth(p),
       redirectUri: location.origin + '/',
       postLogoutRedirectUri: location.origin + '/',
@@ -85,15 +85,38 @@ export async function initAuth() {
   return { account, returnPath: res && res.state ? res.state : null, providers, provider };
 }
 
+/* Nebaigtas ankstesnis prisijungimas (pvz. paspaustas kitas mygtukas ir grįžta
+   atgal) palieka MSAL žymę „vyksta prisijungimas“ — tada joks kitas
+   prisijungimas nepradedamas. Tokią pasenusią žymę išvalome. */
+function clearStaleInteraction() {
+  for (const st of [sessionStorage, localStorage]) {
+    try {
+      Object.keys(st).filter(k => /interaction\.status/i.test(k)).forEach(k => st.removeItem(k));
+    } catch (e) { /* nieko */ }
+  }
+}
+
 /* Prisijungimas pasirinktu būdu (name iš providers). */
 export async function login(returnPath, name) {
   const p = providers.find(x => x.name === name) || provider || providers[0];
   store.set(p.name);
-  if (!pca || provider !== p) { provider = p; pca = makeClient(p); await pca.initialize(); }
-  return pca.loginRedirect({
+  if (!pca || provider !== p) {
+    provider = p; pca = makeClient(p); await pca.initialize();
+    await pca.handleRedirectPromise().catch(() => null);
+  }
+  const req = {
     scopes: [p.scope], state: returnPath || location.pathname,
     prompt: p.kind === 'clients' ? 'login' : 'select_account',
-  });
+  };
+  try {
+    return await pca.loginRedirect(req);
+  } catch (e) {
+    if (e && e.errorCode === 'interaction_in_progress') {
+      clearStaleInteraction();
+      return pca.loginRedirect(req);
+    }
+    throw e;
+  }
 }
 
 export function logout() {

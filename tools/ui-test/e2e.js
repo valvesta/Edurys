@@ -110,6 +110,37 @@ async function loginChoice(browser) {
   } finally { srv.kill(); }
 }
 
+/* Tikra MSAL biblioteka (be imitacijos): abu mygtukai nukreipia į teisingą
+   Microsoft prisijungimo adresą, ir nebaigtas vienas bandymas neužblokuoja kito. */
+async function realMsal(browser) {
+  console.log('Tikras MSAL (nukreipimai):');
+  const port = 18103, base = `http://localhost:${port}`;
+  const srv = await startServer('COMPANY_REP', port);
+  try {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const nav = [];
+    await ctx.route(/^https:\/\//, r => { nav.push(r.request().url()); r.abort(); });
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    const click = async role => {
+      await page.goto(base + '/');
+      await page.waitForSelector(`[data-role=${role}]`);
+      nav.length = 0;
+      await page.click(`[data-role=${role}]`);
+      await page.waitForFunction(() => true);
+      for (let i = 0; i < 40 && !nav.length; i++) await page.waitForTimeout(100);
+      return nav[0] || '';
+    };
+    const c1 = await click('login-clients');
+    assert(c1.startsWith('https://testasklientai.ciamlogin.com/00000000-0000-0000-0000-000000000003/oauth2/v2.0/authorize?'), 'klientams -> External ID prisijungimas');
+    await page.goto(base + '/'); await page.evaluate(() => localStorage.removeItem('authProvider'));
+    const s1 = await click('login-staff');
+    assert(s1.startsWith('https://login.microsoftonline.com/93fb58f1-13db-4382-b5fa-2bb86e1406f1/oauth2/v2.0/authorize?'), 'darbuotojams -> Microsoft 365 (net po nebaigto klientų bandymo)');
+    if (errors.length) throw new Error('Naršyklės klaidos: ' + errors.join('; '));
+  } finally { srv.kill(); }
+}
+
 async function companyRep(browser) {
   console.log('Įmonės atstovas:');
   const port = 18091, base = `http://localhost:${port}`;
@@ -287,6 +318,7 @@ async function adminNoCompanies(browser) {
   const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
   try {
     await loginChoice(browser);
+    await realMsal(browser);
     await companyRep(browser);
     await admin(browser);
     await adminNoCompanies(browser);
