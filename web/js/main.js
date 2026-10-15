@@ -89,18 +89,20 @@ function renderLogin() {
     h('p', { class: 'muted' }, inviting
       ? 'Jus pakvietė prisijungti. Prisijunkite tuo el. paštu, kuriuo gavote kvietimą.'
       : 'Pasirinkite, kaip prisijungti.'),
-    loginButtons(location.pathname),
+    loginButtons(location.pathname, inviting),
     h('p', { class: 'muted small' }, 'Dar neturite prieigos? ', h('a', { href: '/prisijungimo-uzklausa' }, 'Pateikite įmonės prisijungimo užklausą'))));
 }
 
 /* Prisijungimo mygtukai: klientams (kodas el. paštu) — pirmas, darbuotojams — antras. */
-export function loginButtons(returnPath) {
+export function loginButtons(returnPath, inviting) {
   const list = authProviders().slice().sort((a, b) => (a.kind === 'clients' ? -1 : 0) - (b.kind === 'clients' ? -1 : 0));
   return h('div', { class: 'login-buttons' }, list.map((p, i) => h('button', {
     class: i === 0 ? 'btn btn-primary btn-lg' : 'btn btn-lg', 'data-role': 'login-' + p.kind,
-    onclick: () => login(returnPath, p.name).catch(e => toast('Prisijungti nepavyko: ' + (e.errorCode || e.message), 'bad')),
+    onclick: () => login(returnPath, p.name, { signUp: inviting && p.kind === 'clients' }).catch(e => toast('Prisijungti nepavyko: ' + (e.errorCode || e.message), 'bad')),
   }, list.length === 1 ? 'Prisijungti su Microsoft' : p.label)),
-  list.some(p => p.kind === 'clients') ? h('p', { class: 'muted small' }, 'Klientams: įveskite el. paštą — atsiųsime vienkartinį kodą. Slaptažodžio nereikia.') : null);
+  list.some(p => p.kind === 'clients') ? h('p', { class: 'muted small' }, inviting
+    ? 'Pirmą kartą: įveskite el. paštą, kuriuo gavote kvietimą — atsiųsime vienkartinį kodą ir sukursime paskyrą. Slaptažodžio nereikia.'
+    : 'Klientams: įveskite el. paštą — atsiųsime vienkartinį kodą. Slaptažodžio nereikia. Pirmą kartą jungiantis spauskite „Sukurkite“.') : null);
 }
 
 function renderShell() {

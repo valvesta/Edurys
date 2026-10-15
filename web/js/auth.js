@@ -97,7 +97,8 @@ function clearStaleInteraction() {
 }
 
 /* Prisijungimas pasirinktu būdu (name iš providers). */
-export async function login(returnPath, name) {
+/* opts.signUp — klientų erdvėje iškart atidaryti paskyros sukūrimą (naujai pakviestiems). */
+export async function login(returnPath, name, opts = {}) {
   const p = providers.find(x => x.name === name) || provider || providers[0];
   store.set(p.name);
   if (!pca || provider !== p) {
@@ -106,7 +107,7 @@ export async function login(returnPath, name) {
   }
   const req = {
     scopes: [p.scope], state: returnPath || location.pathname,
-    prompt: p.kind === 'clients' ? 'login' : 'select_account',
+    prompt: p.kind === 'clients' ? (opts.signUp ? 'create' : 'login') : 'select_account',
   };
   try {
     return await pca.loginRedirect(req);
