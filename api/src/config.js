@@ -47,10 +47,14 @@ function webAuth(providers) {
     scope: `api://${staff.audience}/access_as_user`,
   }];
   // Klientų prisijungimas (Entra External ID) — jei nurodyta authority ir clientId
-  providers.slice(1).filter(p => p.authority && p.clientId).forEach(p => list.push({
-    name: p.name, kind: 'clients', label: 'Klientams (kodas el. paštu)',
-    clientId: p.clientId, authority: p.authority, scope: `api://${p.audience}/access_as_user`,
-  }));
+  providers.slice(1).filter(p => p.authority && p.clientId).forEach(p => {
+    const t = /^https:\/\/([0-9a-f-]{36})\.ciamlogin\.com\/\1\/v2\.0$/i.exec(p.issuer);
+    list.push({
+      name: p.name, kind: 'clients', label: 'Klientams (kodas el. paštu)',
+      clientId: p.clientId, authority: p.authority, tenantId: t ? t[1] : null, issuer: p.issuer,
+      scope: `api://${p.audience}/access_as_user`,
+    });
+  });
   // Senesniems naršyklės failams — darbuotojų nustatymai ir viršutiniame lygyje
   return { ...list[0], providers: list };
 }

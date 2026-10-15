@@ -19,12 +19,33 @@ const store = {
   set: v => { try { v ? localStorage.setItem(CHOICE_KEY, v) : localStorage.removeItem(CHOICE_KEY); } catch (e) { /* nieko */ } },
 };
 
+/* Klientų erdvės (External ID) adresai pateikiami iš karto — tada MSAL nereikia
+   jų ieškoti tinkle (tai ir sukeldavo „endpoints_resolution_error“). Adresai
+   sutampa su https://<vardas>.ciamlogin.com/<tenantId>/v2.0/.well-known/openid-configuration */
+function ciamAuth(p) {
+  if (p.kind !== 'clients' || !p.tenantId) return {};
+  const host = new URL(p.authority).host;
+  const base = `https://${host}/${p.tenantId}`;
+  return {
+    authority: base + '/',
+    knownAuthorities: [host],
+    authorityMetadata: JSON.stringify({
+      authorization_endpoint: `${base}/oauth2/v2.0/authorize`,
+      token_endpoint: `${base}/oauth2/v2.0/token`,
+      end_session_endpoint: `${base}/oauth2/v2.0/logout`,
+      jwks_uri: `${base}/discovery/v2.0/keys`,
+      issuer: p.issuer,
+    }),
+  };
+}
+
 function makeClient(p) {
   return new window.msal.PublicClientApplication({
     auth: {
       clientId: p.clientId,
       authority: p.authority,
       knownAuthorities: p.kind === 'clients' ? [new URL(p.authority).host] : undefined,
+      ...ciamAuth(p),
       redirectUri: location.origin + '/',
       postLogoutRedirectUri: location.origin + '/',
       navigateToLoginRequestUrl: false,
