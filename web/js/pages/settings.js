@@ -10,6 +10,12 @@ export async function settings(root, ctx) {
   const cBody = h('div', {}, loading());
   root.append(...[pageHeader('Nustatymai'),
     h('h2', {}, 'Sistema'), isGlobal ? null : h('p', { class: 'muted' }, 'Keisti gali tik globalus administratorius.'), sBody,
+    h('h2', {}, 'Paštas'),
+    h('div', { class: 'notes' },
+      h('p', { style: 'margin-top:0' }, 'Laiškai siunčiami iš dėžutės, nurodytos nustatyme ', h('strong', {}, 'MAIL_SENDER'),
+        '. Kol ji tuščia, laiškai tik kaupiami (žr. „Laiškai“).'),
+      h('p', {}, 'Pakeitus dėžutę, Microsoft 365 pusėje programai turi būti leista siųsti būtent iš jos — kitaip laiškai bus pažymėti „Nepavyko“ su paaiškinimu. Nurodymai: docs/AZURE_PARUOSIMAS.md, skyrius „Paštas“.'),
+      isGlobal ? h('button', { class: 'btn', 'data-role': 'email-test', onclick: sendTest }, 'Siųsti bandomąjį laišką sau') : null),
     h('h2', {}, 'Gamintojai ir katalogai'), cBody].filter(Boolean));
 
   try {
@@ -35,6 +41,13 @@ export async function settings(root, ctx) {
       { label: '', render: r => h('button', { class: 'btn', onclick: () => editManufacturerEmail(r, ctx) }, 'Užsakymų el. paštas') },
     ], rows));
   } catch (e) { cBody.replaceChildren(errorBox(e)); }
+}
+
+async function sendTest() {
+  try {
+    const r = await api.post('/admin/email/test');
+    toast(`Bandomasis laiškas įdėtas į eilę (${r.ToAddress}). Rezultatą matysite skiltyje „Laiškai“ po minutės.`);
+  } catch (e) { toast(e.message, 'bad'); }
 }
 
 async function editSetting(r, ctx) {

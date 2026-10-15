@@ -75,12 +75,31 @@ ALTER ROLE app_api ADD MEMBER [app-durys-prod];
 
 ## 5. Paštas
 
-Siunčiama per **Microsoft Graph** iš bendros dėžutės (pvz. `uzsakymai@jupoja.lt`):
-1. Exchange'e sukurti shared mailbox.
-2. App Service Managed Identity suteikti Graph **Mail.Send** (application) teisę.
-3. **Būtinai apriboti** ją tik ta dėžute — Exchange Online *RBAC for Applications*
-   (arba senesnė *Application Access Policy*). Be šio apribojimo programa galėtų siųsti
-   laiškus bet kurio jūsų darbuotojo vardu.
+Laiškus siunčia pati programa (kartu su API) per **Microsoft Graph** iš vienos bendros dėžutės.
+Dėžutė nurodoma sistemoje: **Nustatymai → MAIL_SENDER** (keičia tik globalus administratorius).
+Kol ji tuščia, laiškai tik kaupiami eilėje.
+
+Programai leidžiama siųsti **tik iš tos vienos dėžutės** — per Exchange Online *RBAC for Applications*
+(be Entra Graph teisės visoms dėžutėms):
+
+1. Microsoft 365 administravime sukurkite bendrą dėžutę (Shared mailbox), pvz. `uzsakymai@valvesta.lt`.
+2. Entra → **Enterprise applications** → filtras *Managed Identities* → `edurys`: užsirašykite
+   **Application ID** ir **Object ID** (Object ID = `94591af0-ba45-41fe-9bf2-75b939a8493b`).
+3. PowerShell (Exchange Online modulis):
+   ```powershell
+   Connect-ExchangeOnline
+   New-ServicePrincipal -AppId <Application ID> -ObjectId 94591af0-ba45-41fe-9bf2-75b939a8493b -DisplayName "edurys"
+   New-ManagementScope -Name "edurys-siuntimas" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'uzsakymai@valvesta.lt'"
+   New-ManagementRoleAssignment -App <Application ID> -Role "Application Mail.Send" -CustomResourceScope "edurys-siuntimas"
+   ```
+4. Sistemoje: Nustatymai → `MAIL_SENDER` = `uzsakymai@valvesta.lt` → „Siųsti bandomąjį laišką sau“.
+
+**Pakeisti dėžutę:** sistemoje pakeiskite `MAIL_SENDER` ir Exchange'e — leidžiamą dėžutę:
+```powershell
+Set-ManagementScope -Identity "edurys-siuntimas" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'nauja@valvesta.lt'"
+```
+Teisių pakeitimas Exchange'e gali įsigalioti per 30 min.–2 val. Jei laiškai pažymėti „Nepavyko“
+su klaida *403 / ErrorAccessDenied* — leidimas dar neįsigaliojo arba dėžutė nesutampa.
 
 ## 6. Kiti servisai
 

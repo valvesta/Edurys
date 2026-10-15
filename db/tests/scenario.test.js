@@ -283,3 +283,39 @@ test('12. administratorius sukuria įmonę tiesiogiai; atstovas — ne; kodas un
   const o = await exec('api.Order_CreateDraft', { ActorUserId: S.gaId, CatalogVersionId: S.versionId, CompanyId: id });
   assert.ok(o.recordset[0].OrderId > 0);
 });
+
+test('13. kvietimo nepriėmęs naudotojas: išjungus ir įjungus lieka „Pakviestas“, kvietimą galima persiųsti', async () => {
+  const t = 'tok-v13-' + RUN;
+  const c = await exec('api.Invitation_Create', { ActorUserId: S.gaId, Email: `v13.${RUN}@testas.lt`, DisplayName: 'V13', RoleCode: 'USER',
+    CompanyId: S.companyId, TokenHash: tokenHash(t), ExpiresAt: inDays(7), InviteUrl: 'https://durys.example/k' });
+  const uid = c.recordset[0].UserId;
+  const rev = async () => (await pool.request().input('id', sql.Int, uid).query('SELECT Revision, Status FROM iam.[User] WHERE UserId=@id')).recordset[0];
+  let u = await rev();
+  const off = await exec('api.User_SetStatus', { ActorUserId: S.gaId, UserId: uid, Status: 'DISABLED', ExpectedRevision: u.Revision });
+  assert.equal(off.recordset[0].Status, 'DISABLED');
+  u = await rev();
+  const on = await exec('api.User_SetStatus', { ActorUserId: S.gaId, UserId: uid, Status: 'ACTIVE', ExpectedRevision: u.Revision });
+  assert.equal(on.recordset[0].Status, 'INVITED', 'niekada neprisijungęs -> Pakviestas');
+  await exec('api.Invitation_Resend', { ActorUserId: S.gaId, UserId: uid, TokenHash: tokenHash('r' + t), ExpiresAt: inDays(7), InviteUrl: 'https://durys.example/k' });
+  // prisijungęs naudotojas (S.userId) įjungiamas kaip Aktyvus
+  u = (await pool.request().input('id', sql.Int, S.userId).query('SELECT Revision FROM iam.[User] WHERE UserId=@id')).recordset[0];
+  await exec('api.User_SetStatus', { ActorUserId: S.gaId, UserId: S.userId, Status: 'DISABLED', ExpectedRevision: u.Revision });
+  u = (await pool.request().input('id', sql.Int, S.userId).query('SELECT Revision FROM iam.[User] WHERE UserId=@id')).recordset[0];
+  const back = await exec('api.User_SetStatus', { ActorUserId: S.gaId, UserId: S.userId, Status: 'ACTIVE', ExpectedRevision: u.Revision });
+  assert.equal(back.recordset[0].Status, 'ACTIVE');
+});
+
+test('14. pašto nustatymai: tik globalus administratorius, teisingas adresas, bandomasis laiškas', async () => {
+  await expectSqlError(exec('api.Setting_Set', { ActorUserId: S.repId, SettingKey: 'MAIL_SENDER', SettingValue: 'a@b.lt' }), 51001);
+  await expectSqlError(exec('api.Setting_Set', { ActorUserId: S.gaId, SettingKey: 'MAIL_SENDER', SettingValue: 'blogas' }), 51004);
+  await exec('api.Setting_Set', { ActorUserId: S.gaId, SettingKey: 'MAIL_SENDER', SettingValue: null });
+  await expectSqlError(exec('api.Email_SendTest', { ActorUserId: S.gaId }), 51003);
+  await exec('api.Setting_Set', { ActorUserId: S.gaId, SettingKey: 'MAIL_SENDER', SettingValue: ' Uzsakymai@Testas.LT ' });
+  assert.equal((await exec('api.Email_GetSender')).recordset[0].Sender, 'uzsakymai@testas.lt');
+  await expectSqlError(exec('api.Email_SendTest', { ActorUserId: S.repId }), 51001);
+  const r = await exec('api.Email_SendTest', { ActorUserId: S.gaId });
+  assert.ok(r.recordset[0].EmailId > 0);
+  const e = await pool.request().input('id', sql.BigInt, r.recordset[0].EmailId).query('SELECT TemplateCode, Status FROM notify.EmailOutbox WHERE EmailId=@id');
+  assert.deepEqual(e.recordset[0], { TemplateCode: 'TEST', Status: 'PENDING' });
+  await exec('api.Setting_Set', { ActorUserId: S.gaId, SettingKey: 'MAIL_SENDER', SettingValue: null });
+});

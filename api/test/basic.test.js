@@ -20,7 +20,7 @@ test('šablonai išvalo HTML iš naudotojo duomenų', () => {
 });
 
 test('visi DB naudojami šablonai egzistuoja', () => {
-  for (const t of ['ACCESS_REQUEST_RECEIVED', 'ACCESS_REQUEST_NEW', 'ACCESS_REQUEST_REJECTED', 'ACCESS_APPROVED_INVITATION',
+  for (const t of ['TEST', 'ACCESS_REQUEST_RECEIVED', 'ACCESS_REQUEST_NEW', 'ACCESS_REQUEST_REJECTED', 'ACCESS_APPROVED_INVITATION',
     'USER_INVITATION', 'ORDER_STATUS_CHANGED', 'ORDER_SUBMITTED', 'ORDER_TO_MANUFACTURER']) {
     assert.ok(render(t, {}).subject.length > 0, t);
   }

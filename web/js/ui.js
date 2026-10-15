@@ -132,7 +132,7 @@ export function showInviteLink(url) {
     });
     const box = h('div', { class: 'modal' },
       h('h2', {}, 'Kvietimo nuoroda'),
-      h('p', { class: 'muted' }, 'Sistemos paštas dar neprijungtas, todėl laiškas neišsiųstas. Nukopijuokite nuorodą ir perduokite ją pakviestam žmogui (el. paštu, žinute). Nuoroda veikia tik su tuo el. paštu, kuriuo pakviesta.'),
+      h('p', { class: 'muted' }, 'Kvietimo laiškas įdėtas į siuntimo eilę (jei sistemos paštas prijungtas — bus išsiųstas automatiškai). Jei reikia, nuorodą galite perduoti ir patys. Ji veikia tik su tuo el. paštu, kuriuo pakviesta, ir galioja ribotą laiką.'),
       h('div', { class: 'field-row' }, input, copy),
       h('div', { class: 'modal-actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: () => close() }, 'Uždaryti')));
     const overlay = h('div', { class: 'overlay' }, box);

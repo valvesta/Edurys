@@ -80,8 +80,10 @@ async function setStatus(r, status, ctx) {
     off ? 'Išjungti' : 'Įjungti', off);
   if (!ok) return;
   try {
-    await api.post(`/users/${r.UserId}/status`, { status, revision: r.Revision });
-    toast('Išsaugota.');
+    const x = await api.post(`/users/${r.UserId}/status`, { status, revision: r.Revision });
+    toast(x.status === 'INVITED'
+      ? 'Įjungta. Naudotojas dar nebuvo prisijungęs, todėl jis vėl „Pakviestas“ — išsiųskite kvietimą iš naujo.'
+      : 'Išsaugota.');
     ctx.reload();
   } catch (e) { toast(e.message, 'bad'); }
 }

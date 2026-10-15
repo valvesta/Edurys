@@ -51,9 +51,10 @@ function newInvitation() {
     expiresAt: new Date(Date.now() + config.invitationDays * 86400000),
   };
 }
-/* Kol paštas neprijungtas (MAIL_SENDER nenustatytas), kvietimo nuoroda grąžinama
-   TIK ją sukūrusiam asmeniui, kad galėtų perduoti pats. Prijungus paštą — nebegrąžinama. */
-const withLink = (row, inv) => (config.mail.senderMailbox ? row : { ...row, inviteUrl: inv.url });
+/* Kvietimo nuoroda grąžinama TIK ją sukūrusiam asmeniui — kad galėtų perduoti
+   pats (pvz. kol paštas neprijungtas). Saugu: kvietimą priimti galima tik
+   prisijungus tuo el. paštu, kuriuo pakviesta (tikrina api.Invitation_Accept). */
+const withLink = (row, inv) => ({ ...row, inviteUrl: inv.url });
 
 const inviteParams = inv => ({
   TokenHash: [sql.Binary(32), inv.hash],
@@ -171,13 +172,13 @@ router.post('/users/:id/resend-invitation', requireUser, requireLevel(REP), wrap
 
 router.post('/users/:id/status', requireUser, requireLevel(REP), wrap(async (req, res) => {
   const b = req.body || {};
-  await callProcedure('api.User_SetStatus', {
+  const r = await callProcedure('api.User_SetStatus', {
     ActorUserId: [sql.Int, req.user.UserId],
     UserId: [sql.Int, int(req.params.id, true)],
     Status: [sql.VarChar(20), str(b.status, 20, true)],
     ExpectedRevision: [sql.Int, int(b.revision, true)],
   });
-  res.json({ ok: true });
+  res.json({ ok: true, status: r.recordset && r.recordset[0] ? r.recordset[0].Status : null });
 }));
 
 // ---------------------------------------------------------------- įmonės (ADMIN+)
@@ -222,6 +223,13 @@ router.post('/admin/companies/:id/status', requireUser, requireLevel(ADMIN), wra
     ExpectedRevision: [sql.Int, int(b.revision, true)],
   });
   res.json({ ok: true });
+}));
+
+// ---------------------------------------------------------------- paštas
+/* Bandomasis laiškas sau (globalus administratorius). */
+router.post('/admin/email/test', requireUser, requireLevel(40), wrap(async (req, res) => {
+  const r = await callProcedure('api.Email_SendTest', { ActorUserId: [sql.Int, req.user.UserId] });
+  res.json(r.recordset[0]);
 }));
 
 // ---------------------------------------------------------------- nuotraukos

@@ -17,6 +17,7 @@ const ROOT = path.join(__dirname, '..', '..');
 const API = path.join(ROOT, 'api', 'src');
 const PORT = process.env.PORT || '18091';
 process.env.APP_BASE_URL = `http://localhost:${PORT}`;
+process.env.EMAIL_WORKER = 'off';
 process.env.DB_SERVER = 'imitacija'; process.env.DB_NAME = 'imitacija';
 process.env.WEB_CLIENT_ID = '00000000-0000-0000-0000-000000000001';
 process.env.AUTH_PROVIDERS = JSON.stringify([

@@ -13,6 +13,11 @@ function layout(title, body) {
 }
 
 const templates = {
+  TEST: p => ({
+    subject: 'Bandomasis laiškas — durų užsakymų sistema',
+    html: layout('Paštas veikia', `<p>Sveiki${p.displayName ? ', ' + esc(p.displayName) : ''},</p>
+<p>tai bandomasis laiškas. Jei jį gavote, sistema laiškus siunčia iš dėžutės <b>${esc(p.sender)}</b>.</p>`),
+  }),
   ACCESS_REQUEST_RECEIVED: p => ({
     subject: 'Jūsų prisijungimo užklausa gauta',
     html: layout('Užklausa gauta', `<p>Sveiki, ${esc(p.contactName)},</p>

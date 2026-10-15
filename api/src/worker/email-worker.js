@@ -1,12 +1,17 @@
 'use strict';
 /* ==========================================================================
-   Laiškų siuntimo procesas (paleidžiamas atskirai: npm run worker,
-   arba kaip Azure WebJob / Container App).
+   Laiškų siuntimas.
 
-   Siunčia per Microsoft Graph iš bendros pašto dėžutės (MAIL_SENDER).
-   Programos tapatybė (Managed Identity) turi Graph teisę Mail.Send, kuri
-   Exchange'e APRIBOTA tik ta viena dėžute (Application Access Policy /
-   RBAC for Applications) — žr. docs/AZURE_PARUOSIMAS.md.
+   Veikia kartu su programa (server.js paleidžia startWorker), arba atskirai:
+   npm run worker. Išjungti: aplinkos kintamasis EMAIL_WORKER=off.
+
+   Siuntėjo dėžutė — nustatymas MAIL_SENDER (Nustatymai, keičia globalus
+   administratorius); jei nenurodyta — App Service nustatymas MAIL_SENDER.
+   Kol dėžutė nenurodyta, laiškai tik kaupiami eilėje (nesiunčiami).
+
+   Siunčiama per Microsoft Graph programos tapatybe (Managed Identity), kuriai
+   suteikta Graph teisė Mail.Send, Exchange'e APRIBOTA tik ta dėžute
+   (RBAC for Applications) — žr. docs/AZURE_PARUOSIMAS.md.
    ========================================================================== */
 const os = require('os');
 const { DefaultAzureCredential } = require('@azure/identity');
@@ -17,10 +22,18 @@ const { render } = require('./templates');
 const WORKER_ID = `${os.hostname()}-${process.pid}`;
 const credential = new DefaultAzureCredential();
 
-async function sendViaGraph(to, subject, html) {
-  if (!config.mail.senderMailbox) throw new Error('Nenustatytas MAIL_SENDER');
+let senderCache = { at: 0, value: null };
+async function currentSender() {
+  if (Date.now() - senderCache.at < 60000) return senderCache.value;
+  const r = await callProcedure('api.Email_GetSender', {});
+  const v = (r.recordset[0] && r.recordset[0].Sender) || config.mail.senderMailbox || null;
+  senderCache = { at: Date.now(), value: v };
+  return v;
+}
+
+async function sendViaGraph(sender, to, subject, html) {
   const { token } = await credential.getToken('https://graph.microsoft.com/.default');
-  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(config.mail.senderMailbox)}/sendMail`, {
+  const res = await fetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(sender)}/sendMail`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -33,13 +46,15 @@ async function sendViaGraph(to, subject, html) {
 }
 
 async function tick() {
+  const sender = await currentSender();
+  if (!sender) return 0;                 // paštas neprijungtas — laiškai lieka eilėje
   const r = await callProcedure('api.Email_ClaimBatch', {
     WorkerId: [sql.NVarChar(100), WORKER_ID], BatchSize: [sql.Int, 10], LeaseSeconds: [sql.Int, 120],
   });
   for (const e of r.recordset) {
     try {
       const { subject, html } = render(e.TemplateCode, e.PayloadJson ? JSON.parse(e.PayloadJson) : {});
-      const id = await sendViaGraph(e.ToAddress, subject, html);
+      const id = await sendViaGraph(sender, e.ToAddress, subject, html);
       await callProcedure('api.Email_MarkSent', {
         EmailId: [sql.BigInt, e.EmailId], WorkerId: [sql.NVarChar(100), WORKER_ID], ProviderMessageId: [sql.NVarChar(200), id],
       });
@@ -61,5 +76,12 @@ async function loop() {
   }
 }
 
+let started = false;
+function startWorker() {
+  if (started || process.env.EMAIL_WORKER === 'off') return;
+  started = true;
+  setTimeout(loop, 5000);                 // po programos paleidimo
+}
+
 if (require.main === module) loop();
-module.exports = { tick };
+module.exports = { tick, startWorker };

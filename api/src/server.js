@@ -77,4 +77,7 @@ app.use((err, req, res, next) => {   // eslint-disable-line no-unused-vars
   res.status(500).json({ error: 'Vidinė klaida. Nurodykite šį kodą administratoriui: ' + req.id });
 });
 
-app.listen(config.port, () => console.log(`API klausosi ${config.port} prievado`));
+app.listen(config.port, () => {
+  console.log(`API klausosi ${config.port} prievado`);
+  require('./worker/email-worker').startWorker();
+});
