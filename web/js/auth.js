@@ -46,9 +46,19 @@ export async function initAuth() {
   provider = providers.find(p => p.name === store.get()) || null;
   if (!provider) return { account: null, returnPath: null, providers };
 
-  pca = makeClient(provider);
-  await pca.initialize();
-  const res = await pca.handleRedirectPromise();
+  let res;
+  try {
+    pca = makeClient(provider);
+    await pca.initialize();
+    res = await pca.handleRedirectPromise();
+  } catch (e) {
+    // Nepavykus pasirinktam būdui — pamirštame pasirinkimą, kad būtų galima rinktis kitą
+    store.set(null);
+    const err = new Error(`Prisijungti būdu „${provider.label}“ nepavyko (${e.errorCode || e.message}). Perkraukite puslapį ir pasirinkite dar kartą.`);
+    err.cause = e;
+    provider = null; pca = null;
+    throw err;
+  }
   account = (res && res.account) || pca.getActiveAccount() || pca.getAllAccounts()[0] || null;
   if (account) pca.setActiveAccount(account);
   return { account, returnPath: res && res.state ? res.state : null, providers, provider };
