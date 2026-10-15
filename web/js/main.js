@@ -1,5 +1,5 @@
 /* Programos pradžia: prisijungimas, meniu, puslapių maršrutai. */
-import { initAuth, login, logout } from './auth.js';
+import { initAuth, login, logout, authProviders } from './auth.js';
 import { api } from './api.js';
 import { h, toast, errorBox } from './ui.js';
 import { ordersList, orderDetail } from './pages/orders.js';
@@ -88,9 +88,19 @@ function renderLogin() {
     h('div', { class: 'brand-big' }, 'Durų užsakymai'),
     h('p', { class: 'muted' }, inviting
       ? 'Jus pakvietė prisijungti. Prisijunkite tuo el. paštu, kuriuo gavote kvietimą.'
-      : 'Prisijunkite savo Microsoft paskyra.'),
-    h('button', { class: 'btn btn-primary btn-lg', 'data-role': 'login', onclick: () => login(location.pathname) }, 'Prisijungti su Microsoft'),
+      : 'Pasirinkite, kaip prisijungti.'),
+    loginButtons(location.pathname),
     h('p', { class: 'muted small' }, 'Dar neturite prieigos? ', h('a', { href: '/prisijungimo-uzklausa' }, 'Pateikite įmonės prisijungimo užklausą'))));
+}
+
+/* Prisijungimo mygtukai: klientams (kodas el. paštu) — pirmas, darbuotojams — antras. */
+export function loginButtons(returnPath) {
+  const list = authProviders().slice().sort((a, b) => (a.kind === 'clients' ? -1 : 0) - (b.kind === 'clients' ? -1 : 0));
+  return h('div', { class: 'login-buttons' }, list.map((p, i) => h('button', {
+    class: i === 0 ? 'btn btn-primary btn-lg' : 'btn btn-lg', 'data-role': 'login-' + p.kind,
+    onclick: () => login(returnPath, p.name),
+  }, list.length === 1 ? 'Prisijungti su Microsoft' : p.label)),
+  list.some(p => p.kind === 'clients') ? h('p', { class: 'muted small' }, 'Klientams: įveskite el. paštą — atsiųsime vienkartinį kodą. Slaptažodžio nereikia.') : null);
 }
 
 function renderShell() {

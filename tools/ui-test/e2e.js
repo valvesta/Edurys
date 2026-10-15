@@ -61,7 +61,7 @@ async function newPage(browser, base) {
   page.on('pageerror', e => page.errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource: the server responded with a status of 404/.test(m.text())) page.errors.push('console: ' + m.text()); });
   await page.goto(base + '/');
-  await page.evaluate(() => sessionStorage.setItem('fake', '1'));
+  await page.evaluate(() => { sessionStorage.setItem('fake', '1'); localStorage.setItem('authProvider', 'staff'); });
   return page;
 }
 
@@ -88,6 +88,27 @@ const waitSaved = page => page.waitForFunction(() => {
   const s = document.querySelector('#orderStatus').dataset.state;
   return s === 'saved' || s === 'error' || s === 'mismatch';
 }, null, { timeout: 15000 }).then(() => page.evaluate(() => ({ state: document.querySelector('#orderStatus').dataset.state, text: document.querySelector('#orderStatus').textContent })));
+
+async function loginChoice(browser) {
+  console.log('Prisijungimo pasirinkimas:');
+  const port = 18101, base = `http://localhost:${port}`;
+  const srv = await startServer('COMPANY_REP', port);
+  try {
+    const ctx = await browser.newContext();
+    await ctx.route('**/vendor/msal-browser-4.30.0.min.js', r => r.fulfill({ contentType: 'application/javascript', body: FAKE_MSAL }));
+    const page = await ctx.newPage();
+    await page.goto(base + '/');
+    await page.waitForSelector('[data-role=login-clients]');
+    const labels = await page.$$eval('.login-buttons button', b => b.map(x => x.textContent));
+    assert(labels[0].startsWith('Klientams') && labels[1].startsWith('Darbuotojams'), 'du mygtukai: klientams (pirmas) ir darbuotojams');
+    await page.click('[data-role=login-clients]');
+    await page.waitForSelector('[data-role=nav]');
+    assert(await page.evaluate(() => localStorage.getItem('authProvider')) === 'clients', 'pasirinktas klientų prisijungimas įsimintas');
+    await page.goto(base + '/konfiguratorius/');
+    await page.waitForFunction(() => document.querySelector('#bootOverlay').hidden);
+    assert(true, 'konfigūratorius atsidaro su klientų prisijungimu');
+  } finally { srv.kill(); }
+}
 
 async function companyRep(browser) {
   console.log('Įmonės atstovas:');
@@ -221,7 +242,7 @@ async function adminNoCompanies(browser) {
     // Įmonė sukuriama administravime, tada „Bandyti dar kartą“
     const admin = await page.context().newPage();
     await admin.goto(base + '/');
-    await admin.evaluate(() => sessionStorage.setItem('fake', '1'));
+    await admin.evaluate(() => { sessionStorage.setItem('fake', '1'); localStorage.setItem('authProvider', 'staff'); });
     await admin.goto(base + '/imones');
     await admin.click('[data-role=new-company]');
     await admin.fill('input[name=companyCode]', '305 555 555');
@@ -251,6 +272,7 @@ async function adminNoCompanies(browser) {
 (async () => {
   const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
   try {
+    await loginChoice(browser);
     await companyRep(browser);
     await admin(browser);
     await adminNoCompanies(browser);

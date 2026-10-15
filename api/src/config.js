@@ -29,6 +29,8 @@ function loadProviders() {
       if (!p[k]) throw new Error(`AUTH_PROVIDERS: trūksta „${k}"`);
     });
     if (!/^https:\/\//.test(p.issuer) || !/^https:\/\//.test(p.jwksUri)) throw new Error('AUTH_PROVIDERS: adresai turi būti https');
+    if (p.authority && !/^https:\/\/[a-z0-9-]+\.ciamlogin\.com\/$/i.test(p.authority)) throw new Error('AUTH_PROVIDERS: authority turi būti https://<vardas>.ciamlogin.com/');
+    if (p.clientId && !/^[0-9a-f-]{36}$/i.test(p.clientId)) throw new Error('AUTH_PROVIDERS: clientId turi būti GUID');
   });
   return list;
 }
@@ -38,11 +40,19 @@ function loadProviders() {
 function webAuth(providers) {
   const staff = providers[0];
   const m = /^https:\/\/login\.microsoftonline\.com\/([0-9a-f-]{36})\/v2\.0$/i.exec(staff.issuer);
-  return {
+  const list = [{
+    name: staff.name, kind: 'staff', label: 'Darbuotojams (Microsoft 365)',
     clientId: process.env.WEB_CLIENT_ID || null,
     authority: m ? `https://login.microsoftonline.com/${m[1]}` : null,
     scope: `api://${staff.audience}/access_as_user`,
-  };
+  }];
+  // Klientų prisijungimas (Entra External ID) — jei nurodyta authority ir clientId
+  providers.slice(1).filter(p => p.authority && p.clientId).forEach(p => list.push({
+    name: p.name, kind: 'clients', label: 'Klientams (kodas el. paštu)',
+    clientId: p.clientId, authority: p.authority, scope: `api://${p.audience}/access_as_user`,
+  }));
+  // Senesniems naršyklės failams — darbuotojų nustatymai ir viršutiniame lygyje
+  return { ...list[0], providers: list };
 }
 const authProviders = loadProviders();
 

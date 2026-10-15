@@ -12,7 +12,7 @@
    Adresai:  /konfiguratorius/                 — naujas užsakymas
              /konfiguratorius/?uzsakymas=123   — tęsti juodraštį Nr. 123
    ========================================================================== */
-import { initAuth, login } from '/js/auth.js';
+import { initAuth, login, authProviders } from '/js/auth.js';
 import { api } from '/js/api.js';
 
 const ENGINES = { ERKADO: 'erkado' };            // gamintojo kodas -> /engine/<aplankas>/
@@ -180,7 +180,9 @@ async function start() {
   try { auth = await initAuth(); } catch (e) { fail(e.message); return; }
   if (!auth.account) {
     bootMessage('Norėdami naudotis konfigūratoriumi, prisijunkite.');
-    bootActions([{ label: 'Prisijungti su Microsoft', primary: true, onClick: () => login(location.pathname + location.search) }]);
+    const list = authProviders().slice().sort((a, b) => (a.kind === 'clients' ? -1 : 0) - (b.kind === 'clients' ? -1 : 0));
+    bootActions(list.map((p, i) => ({ label: list.length === 1 ? 'Prisijungti su Microsoft' : p.label, primary: i === 0,
+      onClick: () => login(location.pathname + location.search, p.name) })));
     return;
   }
 

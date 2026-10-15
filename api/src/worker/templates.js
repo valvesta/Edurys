@@ -33,13 +33,14 @@ Kontaktinis asmuo: ${esc(p.contactName)}, ${esc(p.contactEmail)}</p><p>Peržiūr
     html: layout('Prisijungimas patvirtintas', `<p>Sveiki, ${esc(p.displayName)},</p>
 <p>įmonė <b>${esc(p.companyName)}</b> patvirtinta, o jūs paskirtas įmonės atstovu.</p>
 <p><a href="${esc(p.inviteUrl)}">Aktyvuoti paskyrą</a> (nuoroda galioja iki ${esc(date(p.expiresAt))}).</p>
-<p>Prisijungti galėsite savo Microsoft paskyra arba el. paštu su vienkartiniu kodu.</p>`),
+<p>Atidarę nuorodą spauskite „Klientams (kodas el. paštu)“ ir įveskite šį el. pašto adresą — atsiųsime vienkartinį kodą. Slaptažodžio nereikia.</p>`),
   }),
   USER_INVITATION: p => ({
     subject: 'Kvietimas prisijungti',
     html: layout('Kvietimas prisijungti', `<p>Sveiki${p.displayName ? ', ' + esc(p.displayName) : ''},</p>
 <p>${esc(p.invitedBy || 'Administratorius')} kviečia jus prisijungti${p.companyName ? ' kaip įmonės <b>' + esc(p.companyName) + '</b> narį' : ''} (rolė: ${esc(p.roleName)}).</p>
-<p><a href="${esc(p.inviteUrl)}">Priimti kvietimą</a> (galioja iki ${esc(date(p.expiresAt))}).</p>`),
+<p><a href="${esc(p.inviteUrl)}">Priimti kvietimą</a> (galioja iki ${esc(date(p.expiresAt))}).</p>
+${p.companyName ? '<p>Atidarę nuorodą spauskite „Klientams (kodas el. paštu)“ ir įveskite šį el. pašto adresą — atsiųsime vienkartinį kodą. Slaptažodžio nereikia.</p>' : '<p>Atidarę nuorodą spauskite „Darbuotojams (Microsoft 365)“.</p>'}`),
   }),
   ORDER_STATUS_CHANGED: p => ({
     subject: `Užsakymas ${p.orderNumber}: ${p.toStatusName}`,
