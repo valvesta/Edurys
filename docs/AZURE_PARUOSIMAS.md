@@ -79,27 +79,30 @@ Laiškus siunčia pati programa (kartu su API) per **Microsoft Graph** iš vieno
 Dėžutė nurodoma sistemoje: **Nustatymai → MAIL_SENDER** (keičia tik globalus administratorius).
 Kol ji tuščia, laiškai tik kaupiami eilėje.
 
-Programai leidžiama siųsti **tik iš tos vienos dėžutės** — per Exchange Online *RBAC for Applications*
-(be Entra Graph teisės visoms dėžutėms):
+Programai leidžiama siųsti **tik iš grupės „Sistemos siuntėjai“ narių** — per Exchange Online
+*RBAC for Applications* (be Entra Graph teisės visoms dėžutėms). Sistema siunčia iš vienos dėžutės
+(MAIL_SENDER); grupė nustato, kurias galima pasirinkti. Naują dėžutę leisti = įdėti ją į grupę
+(Microsoft 365 administravimo centre, be PowerShell).
 
-1. Microsoft 365 administravime sukurkite bendrą dėžutę (Shared mailbox), pvz. `uzsakymai@valvesta.lt`.
-2. Entra → **Enterprise applications** → filtras *Managed Identities* → `edurys`: užsirašykite
-   **Application ID** ir **Object ID** (Object ID = `94591af0-ba45-41fe-9bf2-75b939a8493b`).
-3. PowerShell (Exchange Online modulis):
+1. Microsoft 365 administravimo centre: **Teams & groups → Active teams & groups → Add a group →
+   Mail-enabled security**, pavadinimas `Sistemos siuntejai`.
+2. Bendra dėžutė (Shared mailbox, licencijos nereikia iki 50 GB) — įdėti į grupę kaip narį.
+3. Entra → **Enterprise applications** → *Application type: Managed Identities* → `edurys`:
+   užsirašyti **Application ID** (Object ID = `94591af0-ba45-41fe-9bf2-75b939a8493b`).
+4. PowerShell (vieną kartą):
    ```powershell
+   Install-Module ExchangeOnlineManagement -Scope CurrentUser   # jei dar nėra
    Connect-ExchangeOnline
-   New-ServicePrincipal -AppId <Application ID> -ObjectId 94591af0-ba45-41fe-9bf2-75b939a8493b -DisplayName "edurys"
-   New-ManagementScope -Name "edurys-siuntimas" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'uzsakymai@valvesta.lt'"
-   New-ManagementRoleAssignment -App <Application ID> -Role "Application Mail.Send" -CustomResourceScope "edurys-siuntimas"
+   $app = "<Application ID>"
+   $g = Get-DistributionGroup "Sistemos siuntejai"
+   New-ServicePrincipal -AppId $app -ObjectId 94591af0-ba45-41fe-9bf2-75b939a8493b -DisplayName "edurys"
+   New-ManagementScope -Name "edurys-siuntejai" -RecipientRestrictionFilter "MemberOfGroup -eq '$($g.DistinguishedName)'"
+   New-ManagementRoleAssignment -App $app -Role "Application Mail.Send" -CustomResourceScope "edurys-siuntejai"
    ```
-4. Sistemoje: Nustatymai → `MAIL_SENDER` = `uzsakymai@valvesta.lt` → „Siųsti bandomąjį laišką sau“.
+5. Patikra (po 30 min.–2 val.): `Test-ServicePrincipalAuthorization -Identity $app -Resource <dėžutė>` — `InScope: True`.
+6. Sistemoje: Nustatymai → `MAIL_SENDER` = dėžutė → „Siųsti bandomąjį laišką sau“.
 
-**Pakeisti dėžutę:** sistemoje pakeiskite `MAIL_SENDER` ir Exchange'e — leidžiamą dėžutę:
-```powershell
-Set-ManagementScope -Identity "edurys-siuntimas" -RecipientRestrictionFilter "PrimarySmtpAddress -eq 'nauja@valvesta.lt'"
-```
-Teisių pakeitimas Exchange'e gali įsigalioti per 30 min.–2 val. Jei laiškai pažymėti „Nepavyko“
-su klaida *403 / ErrorAccessDenied* — leidimas dar neįsigaliojo arba dėžutė nesutampa.
+Jei laiškas pažymėtas „Nepavyko“ su *403 / ErrorAccessDenied* — dėžutė ne grupėje arba leidimas dar neįsigaliojo.
 
 ## 6. Kiti servisai
 
