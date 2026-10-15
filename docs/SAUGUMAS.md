@@ -42,3 +42,10 @@
   Naršyklės rodoma suma tik palyginama — nesutapus, pateikti neleidžiama.
 - Kainų variklio failai tiekiami iš serverio (tie patys, kurie skaičiuoja kainas), tik išvardyti failai.
 - HTML viduje jokio vykdomo kodo (CSP `script-src 'self'`); naudotojų tekstai įterpiami išvalyti (`esc()`).
+
+## Vieši registrai (įmonės duomenų pagalba)
+
+- Serveris (ne naršyklė) kreipiasi į Registrų centro atvirus duomenis (data.gov.lt) ir ES VIES — tik skaitymas,
+  siunčiamas tik įmonės ar PVM kodas, patikrintas pagal formatą (9 / 9–12 skaitmenų).
+- Tik administratoriams, ribojama 30 užklausų per minutę; atsakymai laikomi atmintyje 1 val.
+- Duomenys tik pasiūlomi formoje — įmonė sukuriama tik administratoriui patvirtinus.

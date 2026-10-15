@@ -13,6 +13,7 @@ const { sql, callProcedure } = require('./db');
 const { requireIdentity, requireUser, requireLevel } = require('./auth');
 const pricing = require('./pricing');
 const media = require('./media');
+const registry = require('./registry');
 
 const router = express.Router();
 const ADMIN = 30, REP = 20;
@@ -179,6 +180,17 @@ router.post('/users/:id/status', requireUser, requireLevel(REP), wrap(async (req
 router.get('/admin/companies', requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
   const r = await callProcedure('api.Company_List', { ActorUserId: [sql.Int, req.user.UserId] });
   res.json(r.recordset);
+}));
+
+/* Pagalba pildant įmonės duomenis iš viešų registrų (žr. registry.js). */
+const registryLimiter = rateLimit({ windowMs: 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false });
+router.get('/admin/registry/company/:code', registryLimiter, requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  const found = await registry.lookupCompany(String(req.params.code).trim());
+  if (!found) return res.status(404).json({ error: 'Įmonė su tokiu kodu registre nerasta.' });
+  res.json(found);
+}));
+router.get('/admin/registry/vat/:vat', registryLimiter, requireUser, requireLevel(ADMIN), wrap(async (req, res) => {
+  res.json(await registry.checkVat(String(req.params.vat)));
 }));
 
 /* Įmonės sukūrimas tiesiogiai (administratorius). */

@@ -224,8 +224,16 @@ async function adminNoCompanies(browser) {
     await admin.evaluate(() => sessionStorage.setItem('fake', '1'));
     await admin.goto(base + '/imones');
     await admin.click('[data-role=new-company]');
+    await admin.fill('input[name=companyCode]', '305 555 555');
+    await admin.click('[data-role=action-companyCode]');
+    await admin.waitForFunction(() => document.querySelector('[data-role=note-companyCode]').textContent.startsWith('Rasta'));
+    assert(await admin.inputValue('input[name=name]') === 'UAB "Durų meistras"' && await admin.inputValue('input[name=companyCode]') === '305555555',
+      'registras: pavadinimas užpildytas pagal kodą');
+    await admin.fill('input[name=vatCode]', 'LT100055555511');
+    await admin.click('[data-role=action-vatCode]');
+    await admin.waitForFunction(() => document.querySelector('[data-role=note-vatCode]').textContent.startsWith('VIES: galioja'));
+    assert(true, 'VIES: PVM kodas patikrintas');
     await admin.fill('input[name=name]', 'UAB Nauja');
-    await admin.fill('input[name=companyCode]', '305555555');
     await admin.click('.modal button[type=submit]');
     await admin.waitForFunction(() => document.body.textContent.includes('Įmonė sukurta'));
     assert(true, 'įmonė sukurta per „+ Nauja įmonė“');

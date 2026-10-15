@@ -41,9 +41,12 @@ async function createCompany(ctx) {
     title: 'Nauja įmonė',
     intro: 'Sukūrus įmonę, jos darbuotojus pakvieskite skiltyje „Naudotojai“ (mygtukas „Naudotojai“ prie įmonės).',
     fields: [
+      { name: 'companyCode', label: 'Įmonės kodas', required: true, maxlength: 50,
+        hint: 'Įveskite kodą ir spauskite „Ieškoti registre“ — pavadinimas užsipildys iš Registrų centro.',
+        action: { label: 'Ieškoti registre', run: lookupCompany } },
       { name: 'name', label: 'Pavadinimas', required: true, maxlength: 200, placeholder: 'UAB …' },
-      { name: 'companyCode', label: 'Įmonės kodas', required: true, maxlength: 50 },
-      { name: 'vatCode', label: 'PVM mokėtojo kodas', maxlength: 50, placeholder: 'LT…' },
+      { name: 'vatCode', label: 'PVM mokėtojo kodas', maxlength: 50, placeholder: 'LT…',
+        action: { label: 'Tikrinti PVM', run: checkVat } },
       { name: 'address', label: 'Adresas', maxlength: 400 },
       { name: 'phone', label: 'Telefonas', maxlength: 50 },
       { name: 'email', label: 'El. paštas', type: 'email', maxlength: 320 },
@@ -59,4 +62,32 @@ async function createCompany(ctx) {
     toast('Įmonė sukurta.');
     ctx.reload();
   } catch (e) { toast(e.message, 'bad'); }
+}
+
+/* Registrų centras: pavadinimas pagal kodą. Duomenys tik pasiūlomi — galima pataisyti. */
+async function lookupCompany(inputs, note) {
+  const code = inputs.companyCode.value.replace(/\s+/g, '');
+  if (!/^\d{9}$/.test(code)) { note('Įmonės kodas — 9 skaitmenys.', 'bad'); return; }
+  let r;
+  try { r = await api.get('/admin/registry/company/' + code); }
+  catch (e) { note(e.status === 404 ? 'Registre tokio kodo nėra — patikrinkite kodą.' : e.message, 'bad'); return; }
+  inputs.companyCode.value = code;
+  if (r.name) inputs.name.value = r.name;
+  if (r.address && !inputs.address.value) inputs.address.value = r.address;
+  note(r.deregisteredOn
+    ? `Dėmesio: įmonė išregistruota ${r.deregisteredOn}. Pavadinimas užpildytas.`
+    : `Rasta: ${r.name}${r.registeredOn ? ' (įregistruota ' + r.registeredOn + ')' : ''}. Adresą ir PVM kodą įveskite rankomis.`,
+  r.deregisteredOn ? 'warn' : 'ok');
+}
+
+/* VIES: ar PVM kodas galioja ir kam išduotas. */
+async function checkVat(inputs, note) {
+  const raw = inputs.vatCode.value.trim();
+  if (!raw) { note('Įveskite PVM kodą.', 'bad'); return; }
+  const r = await api.get('/admin/registry/vat/' + encodeURIComponent(raw));
+  inputs.vatCode.value = r.vatCode;
+  if (!r.valid) { note('VIES: šis PVM kodas negalioja.', 'bad'); return; }
+  const name = inputs.name.value.trim();
+  const same = r.name && name && r.name.toLowerCase().replace(/[^a-ząčęėįšųūž0-9]/g, '') === name.toLowerCase().replace(/[^a-ząčęėįšųūž0-9]/g, '');
+  note(`VIES: galioja${r.name ? ' — ' + r.name : ''}.` + (r.name && name && !same ? ' Pavadinimas skiriasi nuo įvesto — patikrinkite.' : ''), r.name && name && !same ? 'warn' : 'ok');
 }

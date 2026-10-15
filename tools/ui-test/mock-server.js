@@ -149,6 +149,24 @@ const fakeAuth = (() => {
   };
 })();
 
+// Viešų registrų imitacija (tikrų atsakymų pavyzdžiai, 2026-10-15)
+const realFetch = global.fetch;
+global.fetch = async (url, opts) => {
+  const u = String(url);
+  const json = body => ({ ok: true, status: 200, json: async () => body });
+  if (u.startsWith('https://get.data.gov.lt/')) {
+    return json(u.endsWith('ja_kodas=305555555')
+      ? { _data: [{ ja_kodas: 305555555, ja_pavadinimas: 'UAB "Durų meistras"', pilnas_adresas: null, reg_data: '2020-01-02', isreg_data: null }] }
+      : { _data: [] });
+  }
+  if (u.startsWith('https://ec.europa.eu/')) {
+    return json(u.endsWith('/100055555511')
+      ? { isValid: true, userError: 'VALID', name: 'UAB "Durų meistras"', address: 'N/A' }
+      : { isValid: false, userError: 'INVALID', name: '---', address: '---' });
+  }
+  return realFetch(url, opts);
+};
+
 const orig = Module._load;
 Module._load = function (request, parent) {
   if (parent && parent.filename.startsWith(API) && (request === './db' || request === '../db')) return fakeDb;

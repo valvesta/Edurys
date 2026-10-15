@@ -71,6 +71,18 @@ export function formModal({ title, intro, fields, submitLabel = 'Išsaugoti', da
           input.value = f.value || '';
         }
         inputs[f.name] = input;
+        // Neprivalomas mygtukas šalia lauko (pvz. „Ieškoti registre“) ir pranešimo eilutė po juo
+        if (f.action) {
+          const note = h('small', { class: 'field-note', 'data-role': 'note-' + f.name });
+          const setNote = (text, kind) => { note.textContent = text || ''; note.className = 'field-note' + (kind ? ' note-' + kind : ''); };
+          const btn = h('button', { type: 'button', class: 'btn', 'data-role': 'action-' + f.name }, f.action.label);
+          btn.addEventListener('click', async () => {
+            btn.disabled = true; setNote('Ieškoma…');
+            try { await f.action.run(inputs, setNote); } catch (e) { setNote(e.message, 'bad'); } finally { btn.disabled = false; }
+          });
+          return h('div', { class: 'field' }, h('span', {}, f.label, f.required ? ' *' : ''),
+            h('div', { class: 'field-row' }, input, btn), note, f.hint ? h('small', {}, f.hint) : null);
+        }
         return h('label', { class: 'field' }, h('span', {}, f.label, f.required ? ' *' : ''), input, f.hint ? h('small', {}, f.hint) : null);
       }));
     const form = h('form', { class: 'modal', onsubmit: e => {

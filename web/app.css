@@ -110,6 +110,12 @@ h2 { font-size: 16px; margin: 28px 0 10px; }
 .field input, .field select, .field textarea { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: inherit; width: 100%; background: #fff; }
 .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid #c7d7fe; border-color: var(--primary); }
 .field small { color: var(--muted); }
+.field-row { display: flex; gap: 8px; }
+.field-row input { flex: 1; }
+.field-note:empty { display: none; }
+.field-note.note-ok { color: var(--ok); }
+.field-note.note-warn { color: var(--warn); }
+.field-note.note-bad { color: var(--danger); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .alert { padding: 10px 14px; border-radius: 6px; margin: 8px 0; }
 .alert-bad { background: #fef3f2; color: var(--danger); border: 1px solid #fecdca; }
