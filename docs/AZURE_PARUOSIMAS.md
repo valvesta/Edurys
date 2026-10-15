@@ -88,12 +88,12 @@ Programai leidžiama siųsti **tik iš grupės „Sistemos siuntėjai“ narių*
    Mail-enabled security**, pavadinimas `Sistemos siuntejai`.
 2. Bendra dėžutė (Shared mailbox, licencijos nereikia iki 50 GB) — įdėti į grupę kaip narį.
 3. Entra → **Enterprise applications** → *Application type: Managed Identities* → `edurys`:
-   užsirašyti **Application ID** (Object ID = `94591af0-ba45-41fe-9bf2-75b939a8493b`).
+   **Application ID** = `9176aebf-adcc-4a65-a281-0be6593e0929` (Object ID = `94591af0-ba45-41fe-9bf2-75b939a8493b`).
 4. PowerShell (vieną kartą):
    ```powershell
    Install-Module ExchangeOnlineManagement -Scope CurrentUser   # jei dar nėra
    Connect-ExchangeOnline
-   $app = "<Application ID>"
+   $app = "9176aebf-adcc-4a65-a281-0be6593e0929"
    $g = Get-DistributionGroup "Sistemos siuntejai"
    New-ServicePrincipal -AppId $app -ObjectId 94591af0-ba45-41fe-9bf2-75b939a8493b -DisplayName "edurys"
    New-ManagementScope -Name "edurys-siuntejai" -RecipientRestrictionFilter "MemberOfGroup -eq '$($g.DistinguishedName)'"
@@ -101,6 +101,12 @@ Programai leidžiama siųsti **tik iš grupės „Sistemos siuntėjai“ narių*
    ```
 5. Patikra (po 30 min.–2 val.): `Test-ServicePrincipalAuthorization -Identity $app -Resource <dėžutė>` — `InScope: True`.
 6. Sistemoje: Nustatymai → `MAIL_SENDER` = dėžutė → „Siųsti bandomąjį laišką sau“.
+
+Atlikta 2026-10-15 (1–4 žingsniai, išskyrus dėžutę).
+
+**Nauja siuntimo dėžutė vėliau:** admin.exchange.microsoft.com → Recipients → Groups →
+„Sistemos siuntejai“ → Members → Add (arba `Add-DistributionGroupMember "Sistemos siuntejai" -Member <dėžutė>`),
+tada 5–6 žingsniai. Sistema pati į grupę įtraukti negali — specialiai.
 
 Jei laiškas pažymėtas „Nepavyko“ su *403 / ErrorAccessDenied* — dėžutė ne grupėje arba leidimas dar neįsigaliojo.
 

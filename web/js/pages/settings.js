@@ -14,7 +14,15 @@ export async function settings(root, ctx) {
     h('div', { class: 'notes' },
       h('p', { style: 'margin-top:0' }, 'Laiškai siunčiami iš dėžutės, nurodytos nustatyme ', h('strong', {}, 'MAIL_SENDER'),
         '. Kol ji tuščia, laiškai tik kaupiami (žr. „Laiškai“).'),
-      h('p', {}, 'Pakeitus dėžutę, Microsoft 365 pusėje programai turi būti leista siųsti būtent iš jos — kitaip laiškai bus pažymėti „Nepavyko“ su paaiškinimu. Nurodymai: docs/AZURE_PARUOSIMAS.md, skyrius „Paštas“.'),
+      h('p', {}, h('strong', {}, 'Svarbu: '), 'sistema gali siųsti tik iš dėžučių, esančių Microsoft 365 grupėje ',
+        h('strong', {}, 'Sistemos siuntejai'), '. Įrašius adresą, kurio grupėje nėra, laiškai bus pažymėti „Nepavyko“.'),
+      h('p', { style: 'margin-bottom:.3em' }, 'Kaip pridėti naują siuntimo dėžutę (vieną kartą, daro Microsoft 365 administratorius):'),
+      h('ol', { style: 'margin-top:0' },
+        h('li', {}, 'Microsoft 365 sukurkite dėžutę — geriausia „Shared mailbox“ (licencijos nereikia).'),
+        h('li', {}, 'admin.exchange.microsoft.com → Recipients → Groups → „Sistemos siuntejai“ → Members → Add → pasirinkite dėžutę.'),
+        h('li', {}, 'Palaukite iki 2 val., kol Microsoft pritaikys leidimą.'),
+        h('li', {}, 'Čia, skiltyje „Sistema“, nustatyme MAIL_SENDER įrašykite dėžutės adresą ir paspauskite „Siųsti bandomąjį laišką sau“.')),
+      h('p', { class: 'muted small' }, 'Sistema į grupę dėžučių įtraukti negali — taip specialiai, kad niekas per sistemą negalėtų siųsti iš kitų darbuotojų pašto. Išsamiau: docs/AZURE_PARUOSIMAS.md, skyrius „Paštas“.'),
       isGlobal ? h('button', { class: 'btn', 'data-role': 'email-test', onclick: sendTest }, 'Siųsti bandomąjį laišką sau') : null),
     h('h2', {}, 'Gamintojai ir katalogai'), cBody].filter(Boolean));
 
